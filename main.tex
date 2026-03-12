@@ -1,0 +1,257 @@
+\documentclass[conference]{IEEEtran}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{tikz}
+
+% Define a soft background color for the code blocks
+\definecolor{codebg}{RGB}{245,245,248}
+
+% Code listing style configuration
+\lstset{
+  language=C++,
+  backgroundcolor=\color{codebg}, 
+  basicstyle=\ttfamily\scriptsize, 
+  keywordstyle=\color{blue},
+  commentstyle=\color{green!60!black},
+  stringstyle=\color{purple},
+  breaklines=true,
+  showstringspaces=false,
+  frame=single,
+  rulecolor=\color{gray!50}, % Softens the frame border color
+  xleftmargin=0.5em,  % Adds safe padding inside the left edge of the box
+  xrightmargin=0.5em, % Adds safe padding inside the right edge of the box
+  captionpos=b
+  % Line numbers removed for clean IEEE two-column fitting
+}
+
+\begin{document}
+
+\title{Visible Light Communication using On-Off Keying: Establishing a Baseline for Adaptive Morse Code Telemetry}
+
+\author{Kartik Lahoti, Puni Aditya \\
+\textit{Department of Electrical Engineering} \\
+\textit{IIT Hyderabad}
+}
+
+\maketitle
+
+\begin{abstract}
+Optical wireless communication offers a license-free alternative to Radio Frequency (RF) systems. However, simple visible light links utilizing Light Dependent Resistors (LDRs) and standard Light Emitting Diodes (LEDs) face significant challenges regarding ambient light interference and hardware latency. This paper outlines the development of a rudimentary Visible Light Communication (VLC) system designed to transmit full sentences via Morse Code On-Off Keying (OOK). We present a software-based dynamic decoding algorithm capable of mitigating the temporal truncation inherent to analog LDRs. Experimental results demonstrate successful sentence transmission, while highlighting the strict environmental limitations of unmodulated VLC, achieving an effective range of 27 cm in total darkness versus 11-12 cm in ambient light.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Visible Light Communication (VLC), On-Off Keying (OOK), Light Dependent Resistor (LDR), Morse Code, Signal Truncation.
+\end{IEEEkeywords}
+
+\section{Introduction}
+Wireless optical communication is highly dependent on clear Line-of-Sight (LoS) and a high Signal-to-Noise Ratio (SNR). In entry-level embedded systems, a standard Light Emitting Diode (LED) paired with a Light Dependent Resistor (LDR) is commonly used to demonstrate data transfer. 
+
+However, ambient environmental lighting introduces a severe DC bias into the receiver. Furthermore, LDRs are constructed from semiconductor materials (like Cadmium Sulfide) that exhibit significant photo-conductive latency—they do not react to light changes instantaneously.
+
+This project establishes a baseline VLC system that transmits full string data (sentences) using Morse Code. By documenting the limitations of this basic hardware, we establish the necessity for adaptive software algorithms to interpret degraded signals.
+
+\section{System Architecture}
+
+\subsection{Hardware Layer}
+The transmitter consists of an Arduino microcontroller directly driving a visible LED. The microcontroller applies On-Off Keying (OOK) to encode ASCII strings into standardized Morse Code pulses (Dit $\approx$ 200 ms, Dah $\approx$ 600 ms).
+
+The receiver utilizes a secondary Arduino connected to an LDR configured in a voltage divider circuit. As incident light strikes the LDR, its resistance drops, causing a measurable voltage spike at the microcontroller's Analog-to-Digital Converter (ADC)\ref{fig:ckt}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figs/circuit.jpeg}
+    \caption{Circuit Diagram}
+    \label{fig:ckt}
+\end{figure}
+
+\section{Hardware Latency and The "Iceberg Effect"}
+
+When bridging the gap between analog optical sensing and digital microcontrollers, a distinct hardware limitation arises known as signal truncation. 
+
+\begin{figure}[htbp]
+    \centering
+    \resizebox{\columnwidth}{!}{
+    \begin{tikzpicture}[scale=0.8]
+        % Axes
+        \draw[->] (0,0) -- (8,0) node[right] {Time (ms)};
+        \draw[->] (0,0) -- (0,5) node[above] {Analog Value};
+
+        % The Analog Signal Curve (Trapezoidal with slopes)
+        \draw[thick, blue, fill=blue!10] (0,0) -- (1.5,0) -- (2.5,4) -- (5.5,4) -- (7.5,0) -- (8,0);
+        \node[blue] at (4, 2) {LDR Response Profile};
+
+        % High Threshold Line (The Problem)
+        \draw[red, thick, dashed] (0,3.5) -- (8,3.5);
+        \node[red, right] at (8,3.5) {High Threshold (Truncation)};
+
+        % Lower Threshold Line (The Solution)
+        \draw[green!60!black, thick, dashed] (0,1.5) -- (8,1.5);
+        \node[green!60!black, right] at (8,1.5) {Ideal Threshold};
+
+        % Intersection Points for High Threshold
+        \draw[dotted, red] (2.375, 3.5) -- (2.375, -0.5); 
+        \draw[dotted, red] (5.75, 3.5) -- (5.75, -0.5); 
+        
+        % Intersection Points for Ideal Threshold
+        \draw[dotted, green!60!black] (1.875, 1.5) -- (1.875, -1);   
+        \draw[dotted, green!60!black] (6.75, 1.5) -- (6.75, -1);   
+
+        % Duration Arrows
+        \draw[<->, red, thick] (2.375, -0.5) -- (5.75, -0.5) node[midway, below] {Detected: $\approx$330ms};
+        \draw[<->, green!60!black, thick] (1.875, -1) -- (6.75, -1) node[midway, below] {Actual: $\approx$600ms};
+
+    \end{tikzpicture}
+    }
+    \caption{The "Iceberg Effect" illustrating temporal truncation caused by improper static thresholding of an LDR signal with high inherent rise/fall latency.}
+    \label{fig:iceberg}
+\end{figure}
+
+As shown in Fig. \ref{fig:iceberg}, an expected "Dah" signal transmitted for 600ms may only be detected for a fraction of that time. LDRs exhibit notable "Rise Time" latency. The resulting voltage is a trapezoidal curve rather than a perfect square wave. To counteract this, our receiver logic employs widened tolerance windows (e.g., accepting any pulse between 400ms and 800ms as a valid 600ms "Dah").
+
+\section{Results and Limitations}
+
+The system was tested under two distinct environmental conditions to measure effective transmission range. The decoding algorithm successfully reconstructed full sentences under both conditions, but the maximum operational distance varied drastically:
+\begin{itemize}
+    \item \textbf{High Ambient Light (Standard Room Lighting):} The maximum reliable transmission distance was limited to \textbf{11 - 12 cm}. The background light saturated the LDR, leaving little dynamic range for the LED's signal to be registered above the noise floor.
+    \item \textbf{Total Darkness:} The maximum reliable transmission distance increased by over 125\%, reaching \textbf{27 cm}. Without ambient DC interference, the LDR could detect much fainter fluctuations from the transmitting LED.
+\end{itemize}
+
+\section{Conclusion}
+While simple OOK using visible LEDs and LDRs is functionally capable of transmitting sentence-length telemetry, it is inherently crippled by ambient light. The necessity of tuning static analog thresholds for a specific room's brightness makes this physical layer unscalable. The findings of this baseline experiment strictly dictate that future iterations of this communication link must utilize active ambient noise rejection, such as carrier wave modulation in the non-visible Infrared spectrum.
+
+\appendices
+\section{Arduino Implementation Codes}
+
+The following source code details the sentence-capable transmitter and the dynamic thresholding receiver utilized to gather the distance metrics presented in this paper.
+
+\begin{lstlisting}[caption={Transmitter (TX) Code - Encodes ASCII Strings to OOK Morse}, label={lst:tx}]
+const int ledPin = 5;
+
+// Standard Morse Code Timing rules
+const int ditTime = 200;
+const int dahTime = 600;
+const int symbolGap = 200;
+const int letterGap = 600;
+const int wordGap = 1400;
+
+// Morse dictionary (A to Z)
+String letters[] = {
+  ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", 
+  ".---", "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.", 
+  "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.." 
+};
+
+void setup() {
+  pinMode(ledPin, OUTPUT);
+}
+
+void flash(int duration) {
+  digitalWrite(ledPin, HIGH);
+  delay(duration);
+  digitalWrite(ledPin, LOW);
+  delay(symbolGap);
+}
+
+void sendChar(char c) {
+  if (c >= 'A' && c <= 'Z') {
+    String morse = letters[c - 'A'];
+    for (int i = 0; i < morse.length(); i++) {
+      if (morse[i] == '.') flash(ditTime);
+      else if (morse[i] == '-') flash(dahTime);
+    }
+    delay(letterGap - symbolGap); 
+  } 
+  else if (c == ' ') {
+    delay(wordGap - symbolGap);
+  }
+}
+
+void sendSentence(String sentence) {
+  sentence.toUpperCase();
+  for (int i = 0; i < sentence.length(); i++) {
+    sendChar(sentence[i]);
+  }
+}
+
+void loop() {
+  sendSentence("HELLO FROM IIT HYDERABAD");
+  delay(5000);
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Receiver (RX) Code - Dynamic Decoding and Gap Detection}, label={lst:rx}]
+const int ldrPin = A0;
+const int threshold = 90; // Tuned for dark environment
+
+unsigned long startTime = 0;
+unsigned long darkStartTime = 0;
+bool isLight = false;
+bool wordSpacePrinted = true;
+String currentLetter = "";
+
+String letters[] = {
+  ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..",
+  ".---", "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.",
+  "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
+};
+
+void setup() {
+  Serial.begin(9600);
+  Serial.println("Listening...");
+}
+
+char decodeMorse(String morse) {
+  for (int i = 0; i < 26; i++) {
+    if (letters[i] == morse) return (char)('A' + i);
+  }
+  return '?';
+}
+
+void loop() {
+  int sensorValue = analogRead(ldrPin);
+  
+  if (sensorValue > threshold) {
+    if (!isLight) {
+      startTime = millis();
+      isLight = true;
+    }
+    darkStartTime = millis(); 
+  } 
+  else {
+    if (isLight) {
+      unsigned long duration = millis() - startTime;
+      
+      // Widened tolerance windows
+      if (duration >= 100 && duration <= 350) currentLetter += ".";
+      else if (duration >= 400 && duration <= 800) currentLetter += "-";
+      
+      isLight = false;
+      darkStartTime = millis();
+    } 
+    else {
+      unsigned long darkDuration = millis() - darkStartTime;
+      
+      // Detect end of letter
+      if (darkDuration > 500 && currentLetter != "") {
+        Serial.print(decodeMorse(currentLetter));
+        currentLetter = "";
+        wordSpacePrinted = false; 
+      }
+      
+      // Detect end of word
+      if (darkDuration > 1200 && !wordSpacePrinted) {
+        Serial.print(" ");
+        wordSpacePrinted = true;
+      }
+    }
+  }
+}
+\end{lstlisting}
+
+\end{document}

@@ -52,7 +52,7 @@ Visible Light Communication (VLC), Infrared (IR), Stepwise Derivative Method (SD
 \end{IEEEkeywords}
 
 \section{Introduction}
-Wireless optical communication is highly dependent on clear Line-of-Sight (LoS) and a high Signal-to-Noise Ratio (SNR). In entry-level embedded systems, a standard Light Emitting Diode (LED) paired with a Light Dependent Resistor (LDR) is commonly used to demonstrate data transfer. However, ambient environmental lighting introduces a severe DC bias into the receiver, and LDRs exhibit significant photo-conductive latency.
+Wireless optical communication is highly dependent on clear Line-of-Sight (LoS) and a high Signal-to-Noise Ratio (SNR) \cite{elgala2011, ghassemlooy2012}. In entry-level embedded systems, a standard Light Emitting Diode (LED) paired with a Light Dependent Resistor (LDR) is commonly used to demonstrate data transfer. However, ambient environmental lighting introduces a severe DC bias into the receiver, and LDRs exhibit significant photo-conductive latency \cite{sewaiwar2015}.
 
 The novelty of this paper lies in its evolutionary approach to solving these physical layer limitations. We first establish a baseline VLC system to document the hardware-induced signal degradation known as the ``Iceberg Effect.'' Following this, we introduce an advanced Infrared (IR) iteration. The core innovation of this second phase is the Stepwise Derivative Method (SDM), a software-defined signal processing algorithm that calculates a rolling average of the ambient noise floor to establish a dynamic, self-calibrating threshold. This transition from static visible light sensing to adaptive IR telemetry, combined with trans-impedance optimization at the receiver, represents a significant leap in communication reliability.
 
@@ -60,7 +60,7 @@ The novelty of this paper lies in its evolutionary approach to solving these phy
 Standard commercial IR systems avoid ambient noise by utilizing 38kHz Carrier Waves and specialized TSOP receiver modules. While effective, these modules act as ``black boxes'' that strip the analog signal data away from the microcontroller, preventing custom low-level signal analysis. Conversely, standard unmodulated photodiode circuits use fixed analog thresholds that fail the moment room lighting changes. Our proposed SDM bridges this gap: it retains the raw analog data of a simple photodiode circuit but applies a dynamic digital moving-average filter to reject ambient DC bias. This ``cross-layer'' approach allows for unparalleled customizability in low-cost hardware.
 
 \subsection{Baud Rate and Telemetry Applicability}
-Morse code, utilizing OOK, possesses a fundamentally low baud rate compared to modern digital modulation schemes like UART or QAM. However, for specialized telemetry applications—such as underwater optical communication, emergency beacons, or low-cost sensor nodes—signal penetration and robustness take precedence over raw speed. The widened tolerance windows used in this paper's decoding logic demonstrate how low baud rate systems can reliably reconstruct highly degraded signals where high-speed protocols would experience catastrophic packet loss.
+Morse code, utilizing OOK, possesses a fundamentally low baud rate compared to modern digital modulation schemes like UART or QAM. However, for specialized telemetry applications—such as underwater optical communication, emergency beacons, or low-cost sensor nodes—signal penetration and robustness take precedence over raw speed. The widened tolerance windows used in this paper's decoding logic demonstrate how low baud rate systems can reliably reconstruct highly degraded signals where high-speed protocols would experience catastrophic packet loss \cite{uysal2015}.
 
 \begin{figure}[htbp]
     \centering
@@ -74,7 +74,6 @@ Morse code, utilizing OOK, possesses a fundamentally low baud rate compared to m
         \node [block, right=of mcu1] (led) {LED/IR LED\\(OOK Driver)};
         
         % Channel
-        % CHANGED: Increased right distance from 1cm to 2.5cm to prevent text overlap
         \node [coordinate, right=2.5cm of led] (ch1) {}; 
         \node [coordinate, below=1.5cm of ch1] (ch2) {};
         
@@ -97,6 +96,7 @@ Morse code, utilizing OOK, possesses a fundamentally low baud rate compared to m
     \caption{System Block Diagram detailing the cross-layer flow from hardware transmission to the software-defined SDM filtering and hardware output.}
     \label{fig:block}
 \end{figure}
+
 \section{Phase I: Visible Light Baseline}
 
 \subsection{Circuit Implementation}
@@ -154,7 +154,7 @@ Because a photodiode in reverse-bias produces a photocurrent ($I_{pd}$) proporti
 \end{itemize}
 
 \subsection{Stepwise Derivative Method (SDM)}
-While the $1\text{M}\Omega$ hardware configuration provides immense gain, it simultaneously amplifies ambient environmental noise (e.g., thermal fluctuations and background IR). To isolate the transmission pulses, we developed the Stepwise Derivative Method (SDM). 
+While the $1\text{M}\Omega$ hardware configuration provides immense gain, it simultaneously amplifies ambient environmental noise (e.g., thermal fluctuations and background IR). To isolate the transmission pulses, we developed the Stepwise Derivative Method (SDM), applying digital moving-average signal processing concepts \cite{smith1997} to act as a robust adaptive threshold \cite{green2005}. 
 
 The algorithm maintains a rolling buffer of $N=10$ discrete analog readings to calculate a floating real-time average ($V_{noise}$) of the ambient environment. The equations governing the SDM are as follows:
 
@@ -234,7 +234,7 @@ This research demonstrates that reliable, long-range optical telemetry does not 
 % }
 
 % void loop() {
-  % String input = "HELLO WORLD";
+  % String input = "HELLO FROM IIT HYDERABAD";
   % input.toUpperCase();
   % for (int i = 0; i < input.length(); i++) { sendChar(input[i]); }
   % delay(5000);
@@ -449,5 +449,8 @@ This research demonstrates that reliable, long-range optical telemetry does not 
   % }
 % }
 % \end{lstlisting}
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
 
 \end{document}

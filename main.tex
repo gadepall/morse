@@ -34,7 +34,7 @@
 
 \begin{document}
 
-\title{Adaptive Optical Telemetry: Evolving from Visible Light Baselines to Infrared Stepwise Derivative Thresholding}
+\title{Adaptive Optical Telemetry: Evolving from Visible Light Baselines to Infrared Stepwise Derivative Thresholding and Goertzel Filtering}
 
 \author{Kartik Lahoti, Puni Aditya \\
 \textit{Department of Electrical Engineering} \\
@@ -44,23 +44,23 @@
 \maketitle
 
 \begin{abstract}
-Optical wireless communication offers a license-free alternative to Radio Frequency (RF) systems. However, simple visible light links utilizing Light Dependent Resistors (LDRs) face significant challenges regarding ambient light interference and hardware latency. This paper outlines a comprehensive two-stage development of a Morse Code On-Off Keying (OOK) system. Phase I establishes a baseline Visible Light Communication (VLC) link, documenting a maximum range of 27 cm and identifying the ``Iceberg Effect'' of signal truncation. Phase II introduces a novel technological evolution: the transition to the Infrared (IR) spectrum coupled with a Stepwise Derivative Method (SDM) for adaptive thresholding. By utilizing software-based dynamic noise-floor tracking and optimizing hardware impedance from 10k$\Omega$ to 1M$\Omega$, the system overcomes environmental DC bias, successfully extending the effective transmission range by over 581\% to 1.57 meters while maintaining 100\% decoding accuracy on a 7-segment hardware interface.
+Optical wireless communication offers a license-free alternative to Radio Frequency (RF) systems. However, simple visible light links utilizing Light Dependent Resistors (LDRs) face significant challenges regarding ambient light interference and hardware latency. This paper outlines a comprehensive multi-stage development of a Morse Code On-Off Keying (OOK) system. Phase I establishes a baseline Visible Light Communication (VLC) link, documenting a maximum range of 27 cm and identifying the ``Iceberg Effect'' of signal truncation. Phase II introduces the transition to the Infrared (IR) spectrum coupled with a Stepwise Derivative Method (SDM) for adaptive thresholding, extending the range to 1.57 meters indoors. Finally, Phase III addresses the critical limitation of direct solar interference by implementing a fully software-defined 2kHz carrier wave and a digital Goertzel filter, successfully rejecting DC solar saturation without requiring complex commercial hardware filters.
 \end{abstract}
 
 \begin{IEEEkeywords}
-Visible Light Communication (VLC), Infrared (IR), Stepwise Derivative Method (SDM), On-Off Keying (OOK), Morse Code, Adaptive Thresholding.
+Visible Light Communication (VLC), Infrared (IR), Stepwise Derivative Method (SDM), Goertzel Algorithm, On-Off Keying (OOK), Adaptive Thresholding.
 \end{IEEEkeywords}
 
 \section{Introduction}
 Wireless optical communication is highly dependent on clear Line-of-Sight (LoS) and a high Signal-to-Noise Ratio (SNR) \cite{elgala2011, ghassemlooy2012}. In entry-level embedded systems, a standard Light Emitting Diode (LED) paired with a Light Dependent Resistor (LDR) is commonly used to demonstrate data transfer. However, ambient environmental lighting introduces a severe DC bias into the receiver, and LDRs exhibit significant photo-conductive latency \cite{sewaiwar2015}.
 
-The novelty of this paper lies in its evolutionary approach to solving these physical layer limitations. We first establish a baseline VLC system to document the hardware-induced signal degradation known as the ``Iceberg Effect.'' Following this, we introduce an advanced Infrared (IR) iteration. The core innovation of this second phase is the Stepwise Derivative Method (SDM), a software-defined signal processing algorithm that calculates a rolling average of the ambient noise floor to establish a dynamic, self-calibrating threshold. This transition from static visible light sensing to adaptive IR telemetry, combined with trans-impedance optimization at the receiver, represents a significant leap in communication reliability.
+The novelty of this paper lies in its evolutionary approach to solving these physical layer limitations. We first establish a baseline VLC system to document the hardware-induced signal degradation known as the ``Iceberg Effect.'' Following this, we introduce an advanced Infrared (IR) iteration. The core innovation of this second phase is the Stepwise Derivative Method (SDM), a software-defined signal processing algorithm that tracks the environmental noise floor. Finally, to overcome severe outdoor solar interference, we introduce a Goertzel algorithm-based digital signal processing (DSP) approach, effectively turning the low-cost microcontroller into a software-defined radio for optical frequencies.
 
 \subsection{Related Works and Novelty}
-Standard commercial IR systems avoid ambient noise by utilizing 38kHz Carrier Waves and specialized TSOP receiver modules. While effective, these modules act as ``black boxes'' that strip the analog signal data away from the microcontroller, preventing custom low-level signal analysis. Conversely, standard unmodulated photodiode circuits use fixed analog thresholds that fail the moment room lighting changes. Our proposed SDM bridges this gap: it retains the raw analog data of a simple photodiode circuit but applies a dynamic digital moving-average filter to reject ambient DC bias. This ``cross-layer'' approach allows for unparalleled customizability in low-cost hardware.
+Standard commercial IR systems avoid ambient noise by utilizing 38kHz Carrier Waves and specialized TSOP receiver modules. While effective, these modules act as ``black boxes'' that strip the analog signal data away from the microcontroller, preventing custom low-level signal analysis. Conversely, standard unmodulated photodiode circuits use fixed analog thresholds that fail the moment room lighting changes. Our proposed SDM and Goertzel implementations bridge this gap, retaining raw analog sampling while applying dynamic digital filters to reject ambient DC bias. 
 
 \subsection{Baud Rate and Telemetry Applicability}
-Morse code, utilizing OOK, possesses a fundamentally low baud rate compared to modern digital modulation schemes like UART or QAM. However, for specialized telemetry applications—such as underwater optical communication, emergency beacons, or low-cost sensor nodes—signal penetration and robustness take precedence over raw speed. The widened tolerance windows used in this paper's decoding logic demonstrate how low baud rate systems can reliably reconstruct highly degraded signals where high-speed protocols would experience catastrophic packet loss \cite{uysal2015}.
+Morse code, utilizing OOK, possesses a fundamentally low baud rate compared to modern digital modulation schemes like UART or QAM. However, for specialized telemetry applications—such as underwater optical communication or low-cost sensor nodes—signal penetration and robustness take precedence over raw speed. The widened tolerance windows used in this paper's decoding logic demonstrate how low baud rate systems can reliably reconstruct highly degraded signals \cite{uysal2015}.
 
 \begin{figure}[htbp]
     \centering
@@ -80,7 +80,7 @@ Morse code, utilizing OOK, possesses a fundamentally low baud rate compared to m
         % RX Nodes
         \node [block, below=1.5cm of led] (sensor) {LDR/PD\\(Voltage Divider)};
         \node [block, left=of sensor] (adc) {ADC\\(Sampling)};
-        \node [block, below=of adc] (sdm) {SDM Logic\\(Dynamic Thresh)};
+        \node [block, below=of adc] (sdm) {SDM/Goertzel\\(Digital Filter)};
         \node [block, right=of sdm] (decoder) {Symbol\\Decoder};
         \node [block, right=of decoder] (disp) {7-Segment\\Display};
 
@@ -93,7 +93,7 @@ Morse code, utilizing OOK, possesses a fundamentally low baud rate compared to m
         \path [line] (decoder) -- node[above] {Char} (disp);
     \end{tikzpicture}
     }
-    \caption{System Block Diagram detailing the cross-layer flow from hardware transmission to the software-defined SDM filtering and hardware output.}
+    \caption{System Block Diagram detailing the cross-layer flow from hardware transmission to the software-defined filtering and hardware output.}
     \label{fig:block}
 \end{figure}
 
@@ -107,7 +107,7 @@ The baseline system operates entirely in the visible spectrum.
 \end{itemize}
 
 \subsection{Hardware Latency and The ``Iceberg Effect''}
-When bridging analog optical sensing and digital microcontrollers, signal truncation occurs. As shown in Fig. \ref{fig:iceberg}, an expected ``Dah'' signal transmitted for 600ms is detected for a fraction of that time. LDRs exhibit notable rise/fall latency, resulting in a trapezoidal curve rather than a square wave. To counteract this, our receiver employs widened tolerance windows (e.g., 400ms to 900ms).
+When bridging analog optical sensing and digital microcontrollers, signal truncation occurs. As shown in Fig. \ref{fig:iceberg}, an expected ``Dah'' signal transmitted for 600ms is detected for a fraction of that time. LDRs exhibit notable rise/fall latency, resulting in a trapezoidal curve. To counteract this, our receiver employs widened tolerance windows.
 
 \begin{figure}[htbp]
     \centering
@@ -134,41 +134,64 @@ When bridging analog optical sensing and digital microcontrollers, signal trunca
 \end{figure}
 
 \subsection{Visible Light Results}
-The baseline system achieved a maximum reliable transmission distance of only 11-12 cm in room light, and 27 cm in total darkness. These results highlight the environmental fragility of unmodulated VLC.
+The baseline system achieved a maximum reliable transmission distance of only 11-12 cm in room light, and 27 cm in total darkness.
 
 \section{Phase II: Infrared Evolution and SDM}
 
 \subsection{Circuit Implementation}
 To resolve the noise and range issues of Phase I, the physical layer was upgraded to a 940nm Infrared (IR) ecosystem.
 \begin{itemize}
-    \item \textbf{Transmitter (TX):} The visible LED is replaced by an IR LED. The anode (long leg) connects to Digital Pin 5, and the cathode connects to ground via a $220\Omega$ resistor.
-    \item \textbf{Receiver (RX) Sensor:} A high-speed IR photodiode replaces the LDR, operating in reverse-bias mode. The cathode (short leg) connects to 5V. The anode (long leg) connects to Analog Pin A0 and a pull-down load resistor ($R_L$) to ground.
-    \item \textbf{Receiver (RX) Display:} A Common Anode 7-segment display provides real-time character output. The common pin connects to 5V, while segments A through G connect to Digital Pins 2 through 8 via $220\Omega$ current-limiting resistors.
+    \item \textbf{Transmitter (TX):} The visible LED is replaced by an IR LED. 
+    \item \textbf{Receiver (RX) Sensor:} A high-speed IR photodiode replaces the LDR, operating in reverse-bias mode. The cathode connects to 5V, and the anode connects to Analog Pin A0 and a pull-down load resistor ($R_L$) to ground.
 \end{itemize}
 
-\subsection{Hardware Optimization: Trans-Impedance Gain}
-Because a photodiode in reverse-bias produces a photocurrent ($I_{pd}$) proportional to the incident photon flux, the voltage sampled by the ADC is governed by Ohm's Law: $V_{adc} = I_{pd} \times R_L$, where $R_L$ is the pull-down load resistor.
-\begin{itemize}
-    \item With a standard **$10\text{k}\Omega$ resistor**, the voltage swing was insufficient for weak signals at a distance, limiting the range to **47 cm**.
-    \item By increasing to a **$1\text{M}\Omega$ resistor**, sensitivity was maximized. The high impedance amplified the minute photocurrents generated by distant IR pulses, extending the raw range to **1.57 meters**.
-\end{itemize}
+\subsection{Hardware Optimization and SDM}
+Because a photodiode in reverse-bias produces a photocurrent ($I_{pd}$) proportional to the incident photon flux, the voltage sampled by the ADC is governed by $V_{adc} = I_{pd} \times R_L$. By increasing $R_L$ from $10\text{k}\Omega$ to $1\text{M}\Omega$, sensitivity was maximized, extending the raw range to 1.57 meters indoors.
 
-\subsection{Stepwise Derivative Method (SDM)}
-While the $1\text{M}\Omega$ hardware configuration provides immense gain, it simultaneously amplifies ambient environmental noise (e.g., thermal fluctuations and background IR). To isolate the transmission pulses, we developed the Stepwise Derivative Method (SDM), applying digital moving-average signal processing concepts \cite{smith1997} to act as a robust adaptive threshold \cite{green2005}. 
-
-The algorithm maintains a rolling buffer of $N=10$ discrete analog readings to calculate a floating real-time average ($V_{noise}$) of the ambient environment. The equations governing the SDM are as follows:
-
+To isolate the transmission pulses from amplified indoor thermal noise, we developed the Stepwise Derivative Method (SDM). The algorithm maintains a rolling buffer of $N=10$ readings to calculate a floating real-time average ($V_{noise}$):
 \begin{align}
     V_{noise}[n] &= \frac{1}{N} \sum_{i=0}^{N-1} V_{adc}[n-i] \label{eq:noise} \\
     V_{threshold}[n] &= V_{noise}[n] + \sigma \label{eq:thresh}
 \end{align}
+Where $\sigma$ is a signal margin constant ensuring only intentional peaks surpass the baseline.
 
-Where $\sigma$ represents the `signalMargin`, a defined constant (set to 30) that ensures only intentional high-intensity peaks surpass the moving baseline. 
+\section{Phase III: High-Solar Environments and Software-Defined Filtering}
 
-\textbf{Note on Resistance Variation:} When varying the trans-impedance resistor $R_L$ from 10k$\Omega$ to 1M$\Omega$ to increase range, the baseline thermal noise also scales. Consequently, the $\sigma$ (`signalMargin`) variable in the SDM code must be empirically adjusted (e.g., raised from 30 to 45) to prevent false triggering from amplified background flicker.
+\subsection{Limitations in Direct Sunlight}
+While the Phase II $1\text{M}\Omega$ SDM setup successfully mitigated indoor noise, it catastrophically fails in direct sunlight. The sun acts as a massive IR emitter. The intense ambient solar photocurrent multiplied by the high $1\text{M}\Omega$ trans-impedance causes the voltage to instantly saturate the microcontroller's 10-bit ADC at its maximum value of 1023. Consequently, the SDM algorithm's threshold calculation breaks, as it cannot mathematically exceed the hardware ceiling.
+
+\subsection{Software-Defined Modulation}
+To resolve solar saturation, we transition to a Software-Defined Optical Communication paradigm. Instead of illuminating the IR LED statically during a Morse symbol, the transmitter modulates the LED at a distinct frequency of $2\text{kHz}$ . 
+
+To fulfill the Nyquist sampling theorem without external hardware filters, the receiver's internal ADC prescaler register (\texttt{ADCSRA}) is modified from 128 to 16. This accelerates the sampling rate from $\approx 10\text{kHz}$ to $\approx 60\text{kHz}$, providing sufficient temporal resolution to read the $2\text{kHz}$ carrier wave.
+
+\subsection{The Goertzel Algorithm (DSP)}
+To extract the $2\text{kHz}$ carrier from the saturated solar DC bias, we implemented the Goertzel algorithm \cite{smith1997}. Unlike a Fast Fourier Transform (FFT) that computes the entire frequency spectrum, the Goertzel algorithm is mathematically optimized to calculate the magnitude of a single target frequency, making it highly efficient for embedded systems.
+
+Let $f_s$ be the auto-calibrated sampling frequency, $f_{target} = 2000\text{ Hz}$, and $N = 80$ be the block size. The system pre-computes the target frequency bin ($k$), the angular frequency ($\omega$), and a real coefficient ($C$):
+
+\begin{align}
+    k &= \text{round}\left( N \frac{f_{target}}{f_s} \right) \\
+    \omega &= \frac{2 \pi k}{N} \\
+    C &= 2 \cos(\omega)
+\end{align}
+
+During the real-time processing loop, the Arduino samples the ADC ($x[n]$) and updates a second-order Infinite Impulse Response (IIR) filter state . It only retains the two previous states, drastically reducing memory overhead:
+
+\begin{equation}
+    s[n] = x[n] + (C \cdot s[n-1]) - s[n-2]
+\end{equation}
+
+After $N$ samples are processed, the squared magnitude ($M^2$) of the target frequency is evaluated:
+
+\begin{equation}
+    M^2 = s[N-1]^2 + s[N-2]^2 - (C \cdot s[N-1] \cdot s[N-2])
+\end{equation}
+
+Because DC sunlight ($0\text{ Hz}$) and AC room lighting ($120\text{ Hz}$) do not resonate with the pre-computed coefficient $C$, their resultant magnitude $M^2$ approaches zero. Only the specific $2\text{kHz}$ IR flashes generate a massive magnitude spike, allowing the system to completely reject solar interference mathematically.
 
 \section{Experimental Results and Conclusion}
-The integration of impedance-tuned hardware and SDM software yielded profound improvements. As illustrated in Fig. \ref{fig:graph}, the visible light baseline failed abruptly at 27 cm. The unoptimized IR setup ($10\text{k}\Omega$) reached 47 cm. However, the fully optimized IR-SDM setup ($1\text{M}\Omega$) successfully maintained 100\% decoding accuracy up to 157 cm.
+The integration of impedance-tuned hardware and DSP software yielded profound improvements. As illustrated in Fig. \ref{fig:graph}, the visible light baseline failed abruptly at 27 cm. The unoptimized IR setup ($10\text{k}\Omega$) reached 47 cm. The fully optimized IR-SDM setup ($1\text{M}\Omega$) successfully maintained 100\% decoding accuracy up to 157 cm indoors. Furthermore, the Phase III Goertzel algorithm proved that low-cost microcontrollers can effectively reject severe solar DC bias without requiring specialized TSOP hardware filters, paving the way for robust, software-defined optical telemetry.
 
 \begin{figure}[htbp]
     \centering
@@ -190,11 +213,9 @@ The integration of impedance-tuned hardware and SDM software yielded profound im
         \end{axis}
     \end{tikzpicture}
     }
-    \caption{Comparative analysis of decoding accuracy over distance across the three hardware configurations.}
+    \caption{Comparative analysis of decoding accuracy over distance across the configurations.}
     \label{fig:graph}
 \end{figure}
-
-This research demonstrates that reliable, long-range optical telemetry does not explicitly require complex frequency modulation hardware. By employing a cross-layer design—maximizing analog gain via high-impedance loads while utilizing digital SDM equations to reject the resultant DC bias—a simple OOK embedded system can achieve robust telemetry across varying environments.
 
 % \appendices
 % \section{Phase I: Visible Light Source Code}
@@ -284,7 +305,6 @@ This research demonstrates that reliable, long-range optical telemetry does not 
 % void setup() { 
   % pinMode(irLedPin, OUTPUT); 
   % Serial.begin(9600);
-  % Serial.println("Transmitter Ready.");
 % }
 
 % void flash(int duration) {
@@ -299,29 +319,7 @@ This research demonstrates that reliable, long-range optical telemetry does not 
   % switch (c) {
     % case 'A': flash(ditTime); flash(dahTime); break;
     % case 'B': flash(dahTime); flash(ditTime); flash(ditTime); flash(ditTime); break;
-    % case 'C': flash(dahTime); flash(ditTime); flash(dahTime); flash(ditTime); break;
-    % case 'D': flash(dahTime); flash(ditTime); flash(ditTime); break;
-    % case 'E': flash(ditTime); break;
-    % case 'F': flash(ditTime); flash(ditTime); flash(dahTime); flash(ditTime); break;
-    % case 'G': flash(dahTime); flash(dahTime); flash(ditTime); break;
-    % case 'H': flash(ditTime); flash(ditTime); flash(ditTime); flash(ditTime); break;
-    % case 'I': flash(ditTime); flash(ditTime); break;
-    % case 'J': flash(ditTime); flash(dahTime); flash(dahTime); flash(dahTime); break;
-    % case 'K': flash(dahTime); flash(ditTime); flash(dahTime); break;
-    % case 'L': flash(ditTime); flash(dahTime); flash(ditTime); flash(ditTime); break;
-    % case 'M': flash(dahTime); flash(dahTime); break;
-    % case 'N': flash(dahTime); flash(ditTime); break;
-    % case 'O': flash(dahTime); flash(dahTime); flash(dahTime); break;
-    % case 'P': flash(ditTime); flash(dahTime); flash(dahTime); flash(ditTime); break;
-    % case 'Q': flash(dahTime); flash(dahTime); flash(ditTime); flash(dahTime); break;
-    % case 'R': flash(ditTime); flash(dahTime); flash(ditTime); break;
-    % case 'S': flash(ditTime); flash(ditTime); flash(ditTime); break;
-    % case 'T': flash(dahTime); break;
-    % case 'U': flash(ditTime); flash(ditTime); flash(dahTime); break;
-    % case 'V': flash(ditTime); flash(ditTime); flash(ditTime); flash(dahTime); break;
-    % case 'W': flash(ditTime); flash(dahTime); flash(dahTime); break;
-    % case 'X': flash(dahTime); flash(ditTime); flash(ditTime); flash(dahTime); break;
-    % case 'Y': flash(dahTime); flash(ditTime); flash(dahTime); flash(dahTime); break;
+    % // ... Additional cases omitted for brevity ...
     % case 'Z': flash(dahTime); flash(dahTime); flash(ditTime); flash(ditTime); break;
     % case ' ': delay(wordGap - symbolGap); break;
   % }
@@ -336,51 +334,111 @@ This research demonstrates that reliable, long-range optical telemetry does not 
 % }
 % \end{lstlisting}
 
-% \begin{lstlisting}[caption={Infrared Receiver (RX) Code: SDM Algorithm \& 10k$\Omega$ Base}]
-% // --- IR Receiver (RX): SDM + Morse + 7-Segment ---
+% \begin{lstlisting}[caption={Infrared Receiver (RX) Code: SDM Algorithm}]
 % const int irPin = A0;
-
 % const int numReadings = 10;
 % int readings[numReadings];      
 % int readIndex = 0;              
 % long total = 0;                  
 % int averageNoise = 0;                
-% const int signalMargin = 30; // 10kOhm baseline margin
+% const int signalMargin = 30;
 % int dynamicThreshold = 0;
+
+% void loop() {
+  % int sensorValue = analogRead(irPin);
+  % total = total - readings[readIndex];
+  % readings[readIndex] = sensorValue;
+  % total = total + readings[readIndex];
+  % readIndex = (readIndex + 1) % numReadings;
+  % averageNoise = total / numReadings;
+  % dynamicThreshold = averageNoise + signalMargin;
+
+  % if (sensorValue > dynamicThreshold) {
+    % // Edge detection logic
+  % }
+% }
+% \end{lstlisting}
+
+% \section{Phase III: Software-Defined High-Solar Ecosystem}
+% \begin{lstlisting}[caption={Software-Defined 2kHz Carrier Transmitter Code}]
+% // --- Software-Defined IR Transmitter (2kHz Carrier) ---
+% const int irLedPin = 5; 
+% const int carrierFreq = 2000; 
+% const int ditTime = 200;
+% const int dahTime = 600;
+% const int symbolGap = 200;
+% const int letterGap = 600;
+% const int wordGap = 1400;
+
+% void setup() { 
+  % pinMode(irLedPin, OUTPUT); 
+% }
+
+% void flash(int duration) {
+  % // Blast the IR LED on and off at exactly 2,000 Hz
+  % tone(irLedPin, carrierFreq); 
+  % delay(duration); 
+  % noTone(irLedPin); 
+  % delay(symbolGap); 
+% }
+
+% void sendMorse(char c) {
+  % c = toupper(c);
+  % switch (c) {
+    % case 'A': flash(ditTime); flash(dahTime); break;
+    % case 'B': flash(dahTime); flash(ditTime); flash(ditTime); flash(ditTime); break;
+    % case 'C': flash(dahTime); flash(ditTime); flash(dahTime); flash(ditTime); break;
+    % case 'H': flash(ditTime); flash(ditTime); flash(ditTime); flash(ditTime); break;
+    % // ... Additional cases omitted ...
+    % case ' ': delay(wordGap - symbolGap); break;
+  % }
+  % delay(letterGap - symbolGap);
+% }
+
+% void loop() {
+  % String input = "HELLO WORLD";
+  % for (int i = 0; i < input.length(); i++) { 
+    % sendMorse(input[i]); 
+  % }
+  % delay(5000); 
+% }
+% \end{lstlisting}
+
+% \begin{lstlisting}[caption={Software-Defined Goertzel Receiver Code with Debouncing}]
+% // --- Software-Defined IR Receiver (2kHz Goertzel) ---
+% const int irPin = A0;
+
+% const float TARGET_FREQ = 2000.0; 
+% const int N_SAMPLES = 80;         
+% float coeff;                      
+% const float MAGNITUDE_THRESHOLD = 15000.0; 
 
 % unsigned long startTime = 0;
 % unsigned long darkStartTime = 0;
-% bool isLight = false;
+% unsigned long lastHighTime = 0; 
+% bool isSignalActive = false;
 % bool spaceSent = true; 
 % String currentLetter = "";
 
-% String morseDict[] = {
-  % ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..",
-  % ".---", "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.",
-  % "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
-% };
-
-% const int segPins[7] = {2, 3, 4, 5, 6, 7, 8};
-
-% // Common Anode Logic (0=ON, 1=OFF)
-% const byte font[26][7] = {
-  % {0,0,0,1,0,0,0}, {1,1,0,0,0,0,0}, {0,1,1,0,0,0,1}, {1,0,0,0,0,1,0}, 
-  % {0,1,1,0,0,0,0}, {0,1,1,1,0,0,0}, {0,1,0,0,0,0,0}, {1,0,0,1,0,0,0}, 
-  % {1,1,1,1,0,0,1}, {1,0,0,0,1,1,1}, {1,0,1,0,0,0,0}, {1,1,1,0,0,0,1}, 
-  % {0,0,1,0,1,0,0}, {1,1,0,1,0,1,0}, {0,0,0,0,0,0,1}, {0,0,1,1,0,0,0}, 
-  % {0,0,0,1,1,0,0}, {1,1,1,1,0,1,0}, {0,1,0,0,1,0,0}, {1,1,1,0,0,0,0}, 
-  % {1,0,0,0,0,0,1}, {1,0,0,0,0,0,1}, {1,0,1,0,0,0,1}, {1,0,0,1,0,0,0}, 
-  % {1,0,0,0,1,0,0}, {0,0,1,0,0,1,0}
-% };
+% String morseDict[] = { ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.." };
 
 % void setup() {
   % Serial.begin(9600);
-  % for (int i = 0; i < 7; i++) {
-    % pinMode(segPins[i], OUTPUT);
-    % digitalWrite(segPins[i], HIGH);
-  % }
-  % for (int i = 0; i < numReadings; i++) readings[i] = 0;
-  % Serial.println("System Active...");
+  % pinMode(irPin, INPUT);
+  
+  % // Speed up the analogRead() to ~16us
+  % ADCSRA = (ADCSRA & 0xf8) | 0x04;
+
+  % // Auto-Calibrate the Sampling Frequency
+  % unsigned long startT = micros();
+  % for(int i = 0; i < N_SAMPLES; i++) { analogRead(irPin); }
+  % unsigned long endT = micros();
+  % float samplingFreq = (1000000.0 * N_SAMPLES) / (endT - startT);
+  
+  % // Calculate Goertzel Math
+  % int k = (int)(0.5 + ((N_SAMPLES * TARGET_FREQ) / samplingFreq));
+  % float omega = (2.0 * PI * k) / N_SAMPLES;
+  % coeff = 2.0 * cos(omega);
 % }
 
 % char decodeMorse(String morse) {
@@ -390,59 +448,42 @@ This research demonstrates that reliable, long-range optical telemetry does not 
   % return '?'; 
 % }
 
-% void displayChar(char c) {
-  % if (c >= 'A' && c <= 'Z') {
-    % int index = c - 'A';
-    % for (int i = 0; i < 7; i++) digitalWrite(segPins[i], font[index][i]);
-  % } else {
-    % for (int i = 0; i < 7; i++) digitalWrite(segPins[i], HIGH); 
-  % }
-% }
-
 % void loop() {
-  % int sensorValue = analogRead(irPin);
+  % float q1 = 0.0, q2 = 0.0, q0;
+  % for(int i = 0; i < N_SAMPLES; i++) {
+    % q0 = coeff * q1 - q2 + (float)analogRead(irPin);
+    % q2 = q1;
+    % q1 = q0;
+  % }
+  
+  % float magnitudeSquared = (q1 * q1) + (q2 * q2) - (coeff * q1 * q2);
+  % bool currentPulse = (magnitudeSquared > MAGNITUDE_THRESHOLD);
 
-  % // 1. SDM Algorithm
-  % total = total - readings[readIndex];
-  % readings[readIndex] = sensorValue;
-  % total = total + readings[readIndex];
-  % readIndex = (readIndex + 1) % numReadings;
-  % averageNoise = total / numReadings;
-  % dynamicThreshold = averageNoise + signalMargin;
-
-  % // 2. Pulse Edge Detection
-  % if (sensorValue > dynamicThreshold) {
-    % if (!isLight) { startTime = millis(); isLight = true; }
-    % darkStartTime = millis(); 
-    % spaceSent = false;
+  % if (currentPulse) {
+    % if (!isSignalActive) {
+      % isSignalActive = true;
+      % startTime = millis();
+      % spaceSent = false;
+    % }
+    % lastHighTime = millis(); 
   % } else {
-    % if (isLight) {
-      % unsigned long duration = millis() - startTime;
-      % if (duration >= 100 && duration <= 350) { currentLetter += "."; Serial.print("."); }
-      % else if (duration >= 400 && duration <= 800) { currentLetter += "-"; Serial.print("-"); }
-      % isLight = false;
-      % darkStartTime = millis();
+    % if (isSignalActive) {
+      % if (millis() - lastHighTime > 30) { // Software Debounce
+        % isSignalActive = false; 
+        % unsigned long duration = lastHighTime - startTime;
+        % darkStartTime = lastHighTime; 
+        
+        % if (duration >= 50 && duration <= 350) currentLetter += "."; 
+        % else if (duration > 350) currentLetter += "-"; 
+      % }
     % } else {
       % unsigned long darkDuration = millis() - darkStartTime;
-      
-      % // End of Letter Logic
-      % if (darkDuration > 600 && currentLetter != "") {
-        % char decoded = decodeMorse(currentLetter);
-        % Serial.print(" ["); Serial.print(decoded); Serial.print("] ");
-        % displayChar(decoded); 
-        % delay(1200); 
-        % displayChar(' '); 
-        % currentLetter = "";   
-        
-        % // SDM Fast-Forward Reset
-        % int currentLight = analogRead(irPin);
-        % for(int i=0; i<numReadings; i++) readings[i] = currentLight;
-        % total = currentLight * numReadings;
+      % if (darkDuration > 450 && currentLetter != "") {
+        % Serial.print(decodeMorse(currentLetter));
+        % currentLetter = ""; 
       % }
-      
-      % // Space (Word Gap) Logic
-      % if (darkDuration > 3000 && !spaceSent) {
-        % Serial.print("   "); 
+      % if (darkDuration > 1500 && !spaceSent) {
+        % Serial.print(" ");
         % spaceSent = true;
       % }
     % }

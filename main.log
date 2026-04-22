@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.3.19)  22 APR 2026 16:16
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.3.19)  22 APR 2026 16:19
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -958,13 +958,20 @@ LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 1
 File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
 )
 [2]
-Overfull \hbox (6.3424pt too wide) in paragraph at lines 237--244
+Overfull \hbox (6.3424pt too wide) in paragraph at lines 238--245
  [][] 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 249--250
+Underfull \hbox (badness 10000) in paragraph at lines 250--251
 []\OT1/ptm/m/n/10 The in-te-gra-tion of impedance-tuned hard-ware with
+ []
+
+
+Underfull \hbox (badness 2111) in paragraph at lines 250--251
+\OT1/ptm/m/n/10 abruptly at 27 cm. The un-op-ti-mized IR setup ($\OT1/cmr/m/n/1
+0 10[]
+$\OT1/ptm/m/n/10 )
  []
 
 (./main.bbl [3])
@@ -1009,7 +1016,7 @@ ive/2026/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb><c:/texlive/2026/texmf-d
 ist/fonts/type1/urw/times/utmb8a.pfb><c:/texlive/2026/texmf-dist/fonts/type1/ur
 w/times/utmbi8a.pfb><c:/texlive/2026/texmf-dist/fonts/type1/urw/times/utmr8a.pf
 b><c:/texlive/2026/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on main.pdf (4 pages, 178501 bytes).
+Output written on main.pdf (4 pages, 178654 bytes).
 PDF statistics:
  223 PDF objects out of 1000 (max. 8388607)
  187 compressed objects within 2 object streams

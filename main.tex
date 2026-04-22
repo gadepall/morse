@@ -189,6 +189,7 @@ The term \textbf{``chopping''} refers to this process of breaking a continuous D
     \item \textbf{Data Signal:} The intentional Morse pulses are now ``nested'' inside a 2000Hz carrier.
 \end{itemize}
 This separation allows the receiver to ignore the saturated 0Hz baseline and focus entirely on the energy oscillating at the target frequency band. This is implemented in software using the \texttt{tone()} function, which leverages the microcontroller's internal timers to generate a precise square wave.
+Furthermore, operating the LED at a 50% duty cycle reduces the active transmission power consumption by half compared to the continuous DC pulses of Phase II, highly benefiting battery-constrained remote sensor nodes.
 
 \begin{figure}[htbp]
     \centering
@@ -246,7 +247,7 @@ Phase III (Modulated)   & 81.4              & 4.32                   & \textbf{D
 As shown in Table \ref{tab:bps}, Phase III maintains the peak bitrate of 4.32 bps even in high-solar environments where Phase I and II systems experience complete signal saturation and $<10$\% decoding accuracy.
 
 \subsection{Range Analysis}
-The integration of impedance-tuned hardware with software-defined filtering yielded profound improvements. As illustrated in Fig. \ref{fig:graph}, the visible light baseline failed abruptly at 27 cm. The unoptimized IR setup ($10\text{k}\Omega$) reached 47 cm. The fully optimized IR-SDM setup ($1\text{M}\Omega$) successfully maintained 100\% decoding accuracy up to 157 cm indoors. 
+The integration of impedance-tuned hardware with software-defined filtering yielded profound improvements. As illustrated in Fig. \ref{fig:graph}, the visible light baseline failed abruptly at 27 cm. The unoptimized IR setup ($10\text{k}\Omega$) reached 47 cm. The fully optimized IR-SDM setup ($1\text{M}\Omega$) successfully maintained 100\% decoding accuracy up to 157 cm indoors. Decoding accuracy was empirically measured as the percentage of correctly reconstructed characters from the 44-byte test payload at varying distances.
 
 \begin{figure}[htbp]
     \centering

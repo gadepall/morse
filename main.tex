@@ -36,9 +36,9 @@
 
 \title{Adaptive Optical Telemetry: Evolving from Visible Light Baselines to Infrared Stepwise Derivative Thresholding and Goertzel Filtering}
 
-\author{Kartik Lahoti, Puni Aditya \\
-\textit{Department of Electrical Engineering} \\
-\textit{IIT Hyderabad}
+\author{\IEEEauthorblockN{Kartik Lahoti, Puni Aditya}
+\IEEEauthorblockA{\textit{Department of Electrical Engineering} \\
+\textit{IIT Hyderabad}}
 }
 
 \maketitle
@@ -54,7 +54,7 @@ Visible Light Communication (VLC), Infrared (IR), Stepwise Derivative Method (SD
 \section{Introduction}
 Wireless optical communication is highly dependent on clear Line-of-Sight (LoS) and a high Signal-to-Noise Ratio (SNR) \cite{elgala2011, ghassemlooy2012}. In entry-level embedded systems, a standard Light Emitting Diode (LED) paired with a Light Dependent Resistor (LDR) is commonly used to demonstrate data transfer. However, ambient environmental lighting introduces a severe DC bias into the receiver, and LDRs exhibit significant photo-conductive latency \cite{sewaiwar2015}.
 
-The novelty of this paper lies in its evolutionary approach to solving these physical layer limitations. We first establish a baseline VLC system to document the hardware-induced signal degradation known as the ``Iceberg Effect.'' Following this, we introduce an advanced Infrared (IR) iteration. The core innovation of this second phase is the Stepwise Derivative Method (SDM), a software-defined signal processing algorithm that tracks the environmental noise floor. Finally, to overcome severe outdoor solar interference, we introduce a Goertzel algorithm-based digital signal processing (DSP) approach, effectively turning the low-cost microcontroller into a software-defined radio for optical frequencies.
+The novelty of this paper lies in its evolutionary approach to solving these physical layer limitations, building upon foundational On-Off Keying (OOK) optical paradigms \cite{komine2004}. We first establish a baseline VLC system to document the hardware-induced signal degradation known as the ``Iceberg Effect.'' Following this, we introduce an advanced Infrared (IR) iteration. The core innovation of this second phase is the Stepwise Derivative Method (SDM), a software-defined signal processing algorithm that tracks the environmental noise floor \cite{green2005}. Finally, to overcome severe outdoor solar interference \cite{rajagopal2012}, we introduce a Goertzel algorithm-based digital signal processing (DSP) approach, effectively turning the low-cost microcontroller into a software-defined radio for optical frequencies.
 
 \subsection{Related Works and Novelty}
 Standard commercial IR systems avoid ambient noise by utilizing 38kHz Carrier Waves and specialized TSOP receiver modules. While effective, these modules act as ``black boxes'' that strip the analog signal data away from the microcontroller, preventing custom low-level signal analysis. Conversely, standard unmodulated photodiode circuits use fixed analog thresholds that fail the moment room lighting changes. Our proposed SDM and Goertzel implementations bridge this gap, retaining raw analog sampling while applying dynamic digital filters to reject ambient DC bias. 
@@ -97,12 +97,32 @@ Morse code, utilizing OOK, possesses a fundamentally low baud rate compared to m
     \label{fig:block}
 \end{figure}
 
+\section{Hardware Configuration}
+To ensure reproducibility, the system was tested using standard off-the-shelf components. The development was split into two hardware profiles as detailed in Table \ref{tab:components}.
+
+\begin{table}[htbp]
+\caption{List of Components}
+\label{tab:components}
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Setup} & \textbf{Components} \\ \hline
+\textbf{Common} & 2$\times$ Arduino UNO, \\
+&  2$\times$ Breadboards, \\
+& Jumper Cables \\ \hline
+\textbf{Phase I (Visible)} & 1$\times$ Red LED ($5\text{mm}$), \\
+& 1$\times$ LDR ($5\text{mm}$) \\ \hline
+\textbf{Phase II \& III (IR)} & 1$\times$ 940nm IR LED, \\
+& 1$\times$ IR Photodiode (Reverse Bias) \\ \hline
+\end{tabular}
+\end{table}
+
 \section{Phase I: Visible Light Baseline}
 
 \subsection{Circuit Implementation}
 The baseline system operates entirely in the visible spectrum. 
 \begin{itemize}
-    \item \textbf{Transmitter (TX):} An Arduino microcontroller drives a standard visible LED. The LED's anode connects to Digital Pin 5, while the cathode grounds through a $220\Omega$ current-limiting resistor. 
+    \item \textbf{Transmitter (TX):} An Arduino microcontroller drives a standard visible LED. The LED's anode connects to Digital Pin 5, while the cathode is grounded through a $220\Omega$ current-limiting resistor. 
     \item \textbf{Receiver (RX):} The optical sensor is a Light Dependent Resistor (LDR) arranged in a voltage divider. The 5V supply is connected to one leg of the LDR. The secondary leg connects to the Arduino's Analog Pin A0 and a $10\text{k}\Omega$ pull-down resistor connected to ground. 
 \end{itemize}
 
@@ -146,9 +166,9 @@ To resolve the noise and range issues of Phase I, the physical layer was upgrade
 \end{itemize}
 
 \subsection{Hardware Optimization and SDM}
-Because a photodiode in reverse-bias produces a photocurrent ($I_{pd}$) proportional to the incident photon flux, the voltage sampled by the ADC is governed by $V_{adc} = I_{pd} \times R_L$. By increasing $R_L$ from $10\text{k}\Omega$ to $1\text{M}\Omega$, sensitivity was maximized, extending the raw range to 1.57 meters indoors.
+Operating in reverse-bias, the photodiode produces a photocurrent ($I_{pd}$) proportional to the incident photon flux; consequently, the voltage sampled by the ADC is governed by $V_{adc} = I_{pd} \times R_L$. By increasing $R_L$ from $10\text{k}\Omega$ to $1\text{M}\Omega$, sensitivity was maximized, extending the raw range to 1.57 meters indoors.
 
-To isolate the transmission pulses from amplified indoor thermal noise, we developed the Stepwise Derivative Method (SDM). The algorithm maintains a rolling buffer of $N=10$ readings to calculate a floating real-time average ($V_{noise}$):
+To isolate the transmission pulses from amplified indoor thermal noise, we developed the Stepwise Derivative Method (SDM) \cite{green2005}. The algorithm maintains a rolling buffer of $N=10$ readings to calculate a floating real-time average ($V_{noise}$):
 \begin{align}
     V_{noise}[n] &= \frac{1}{N} \sum_{i=0}^{N-1} V_{adc}[n-i] \label{eq:noise} \\
     V_{threshold}[n] &= V_{noise}[n] + \sigma \label{eq:thresh}
@@ -158,40 +178,75 @@ Where $\sigma$ is a signal margin constant ensuring only intentional peaks surpa
 \section{Phase III: High-Solar Environments and Software-Defined Filtering}
 
 \subsection{Limitations in Direct Sunlight}
-While the Phase II $1\text{M}\Omega$ SDM setup successfully mitigated indoor noise, it catastrophically fails in direct sunlight. The sun acts as a massive IR emitter. The intense ambient solar photocurrent multiplied by the high $1\text{M}\Omega$ trans-impedance causes the voltage to instantly saturate the microcontroller's 10-bit ADC at its maximum value of 1023. Consequently, the SDM algorithm's threshold calculation breaks, as it cannot mathematically exceed the hardware ceiling.
+While the Phase II setup successfully mitigated indoor noise, it fails in direct sunlight. The sun acts as a high-intensity IR emitter, causing the photodiode to produce a massive steady-state photocurrent. This saturates the 10-bit ADC at 1023, effectively ``blinding'' the receiver and removing the dynamic range necessary for the SDM algorithm to function.
 
-\subsection{Software-Defined Modulation}
-To resolve solar saturation, we transition to a Software-Defined Optical Communication paradigm. Instead of illuminating the IR LED statically during a Morse symbol, the transmitter modulates the LED at a distinct frequency of $2\text{kHz}$ . 
+\subsection{2kHz On-Off Keying (OOK) Modulation}
+To resolve solar saturation, we transition to a Software-Defined Optical paradigm. Instead of a static DC pulse, the transmitter modulates the IR LED with a 2kHz square wave carrier during every Morse ``mark'' (dit or dah).
 
-To fulfill the Nyquist sampling theorem without external hardware filters, the receiver's internal ADC prescaler register (\texttt{ADCSRA}) is modified from 128 to 16. This accelerates the sampling rate from $\approx 10\text{kHz}$ to $\approx 60\text{kHz}$, providing sufficient temporal resolution to read the $2\text{kHz}$ carrier wave.
+The term \textbf{``chopping''} refers to this process of breaking a continuous DC signal into a high-frequency sequence of pulses. By toggling the LED at 2kHz (a 50\% duty cycle), we perform a frequency-domain shift:
+\begin{itemize}
+    \item \textbf{DC Offset (Sun):} The solar interference resides at 0Hz.
+    \item \textbf{Data Signal:} The intentional Morse pulses are now ``nested'' inside a 2000Hz carrier.
+\end{itemize}
+This separation allows the receiver to ignore the saturated 0Hz baseline and focus entirely on the energy oscillating at the target frequency band. This is implemented in software using the \texttt{tone()} function, which leverages the microcontroller's internal timers to generate a precise square wave.
 
-\subsection{The Goertzel Algorithm (DSP)}
-To extract the $2\text{kHz}$ carrier from the saturated solar DC bias, we implemented the Goertzel algorithm \cite{smith1997}. Unlike a Fast Fourier Transform (FFT) that computes the entire frequency spectrum, the Goertzel algorithm is mathematically optimized to calculate the magnitude of a single target frequency, making it highly efficient for embedded systems.
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[scale=1]
+        % Axes
+        \draw[->] (0,0) -- (6,0) node[right] {Time};
+        \draw[->] (0,-0.5) -- (0,1.5) node[above] {Amplitude};
+        
+        % Logic Envelope (Dashed)
+        \draw[dashed, gray] (0,0) -- (1,0) -- (1,1) -- (3,1) -- (3,0) -- (4,0) -- (4,1) -- (5,1) -- (5,0);
+        \node[gray, scale=0.8] at (2,1.2) {Morse 'A' Envelope (.-)};
 
-Let $f_s$ be the auto-calibrated sampling frequency, $f_{target} = 2000\text{ Hz}$, and $N = 80$ be the block size. The system pre-computes the target frequency bin ($k$), the angular frequency ($\omega$), and a real coefficient ($C$):
+        % 2kHz Square Wave Modulated Carrier (Dah)
+        \draw[blue, thick] (1,0) -- (1.1,0) -- (1.1,0.8) -- (1.2,0.8) -- (1.2,0) -- (1.3,0) -- (1.3,0.8) -- (1.4,0.8) -- (1.4,0) -- (1.5,0) -- (1.5,0.8) -- (1.6,0.8) -- (1.6,0) -- (1.7,0) -- (1.7,0.8) -- (1.8,0.8) -- (1.8,0) -- (1.9,0) -- (1.9,0.8) -- (2.0,0.8) -- (2.0,0) -- (2.1,0) -- (2.1,0.8) -- (2.2,0.8) -- (2.2,0) -- (2.3,0) -- (2.3,0.8) -- (2.4,0.8) -- (2.4,0) -- (2.5,0) -- (2.5,0.8) -- (2.6,0.8) -- (2.6,0) -- (2.7,0) -- (2.7,0.8) -- (2.8,0.8) -- (2.8,0) -- (2.9,0) -- (2.9,0.8) -- (3.0,0.8) -- (3.0,0);
+        
+        % 2kHz Square Wave Modulated Carrier (Dit)
+        \draw[blue, thick] (4,0) -- (4.1,0) -- (4.1,0.8) -- (4.2,0.8) -- (4.2,0) -- (4.3,0) -- (4.3,0.8) -- (4.4,0.8) -- (4.4,0) -- (4.5,0) -- (4.5,0.8) -- (4.6,0.8) -- (4.6,0) -- (4.7,0) -- (4.7,0.8) -- (4.8,0.8) -- (4.8,0) -- (4.9,0) -- (4.9,0.8) -- (5.0,0.8) -- (5.0,0);
+        
+        \node[blue, align=center, scale=0.8] at (4.5,1.5) {2kHz Square Wave\\Carrier};
+        \node[red, align=center, scale=0.8] at (3,-0.3) {0Hz Solar Bias Ignored};
+    \end{tikzpicture}
+    \caption{Phase III Modulation: The logic envelope acts as a gate for the 2kHz square wave. This ``chopping'' enables frequency-selective filtering at the receiver.}
+    \label{fig:modulation}
+\end{figure}
 
-\begin{align}
-    k &= \text{round}\left( N \frac{f_{target}}{f_s} \right) \\
-    \omega &= \frac{2 \pi k}{N} \\
-    C &= 2 \cos(\omega)
-\end{align}
+\subsection{Sampling and Goertzel Digital Signal Processing}
+To detect the 2kHz carrier without external hardware filters, the receiver's ADC must satisfy the Nyquist theorem (requiring a minimum sampling rate of 4kHz). We modify the \texttt{ADCSRA} register to change the prescaler from 128 to 16, accelerating the sampling rate from $\approx 10\text{kHz}$ to $\approx 60\text{kHz}$, which provides massive oversampling for high-resolution frequency detection.
 
-During the real-time processing loop, the Arduino samples the ADC ($x[n]$) and updates a second-order Infinite Impulse Response (IIR) filter state . It only retains the two previous states, drastically reducing memory overhead:
+We then implement the Goertzel algorithm \cite{smith1997} to act as a digital bandpass filter. Unlike a full Fast Fourier Transform (FFT), the Goertzel algorithm is computationally optimized to calculate the magnitude of a single target frequency ($f_{target} = 2000\text{Hz}$), making it ideal for the limited memory of microcontrollers \cite{mitra2006}. 
 
+During the real-time loop, the system updates a second-order Infinite Impulse Response (IIR) filter state:
 \begin{equation}
-    s[n] = x[n] + (C \cdot s[n-1]) - s[n-2]
+    s[n] = x[n] + \left(2 \cos\left(\frac{2\pi k}{N}\right) \cdot s[n-1]\right) - s[n-2]
 \end{equation}
+After $N=80$ samples (which takes approximately $1.33\text{ ms}$ to process at 60kHz), the squared magnitude $M^2$ is evaluated. Because DC sunlight (0Hz) and 120Hz indoor flicker do not resonate with the pre-computed coefficient, their resultant magnitude approaches zero. This effectively neutralizes the moving noise floor that required adaptive SDM in Phase II, allowing Phase III to utilize a highly reliable static magnitude threshold to ``see'' the 2kHz flashes even through a saturated DC bias.
 
-After $N$ samples are processed, the squared magnitude ($M^2$) of the target frequency is evaluated:
+\section{Experimental Results}
 
-\begin{equation}
-    M^2 = s[N-1]^2 + s[N-2]^2 - (C \cdot s[N-1] \cdot s[N-2])
-\end{equation}
+\subsection{Throughput and Bitrate Analysis}
+We evaluated the efficiency of the three phases by transmitting a 44-byte (352-bit) test sentence. While the Phase I (LDR) setup required slower custom timings (101.8s) to account for photo-conductive latency, the transition to standard Morse timing in Phase II and Phase III significantly improved throughput. Because Morse code utilizes variable-length OOK encoding, instantaneous throughput fluctuates based on character transmission length. A 44-byte pangram was explicitly chosen as the test payload to force the transmission of all alphabet symbol variants, thereby providing a normalized, worst-case representative average for system bitrate.
 
-Because DC sunlight ($0\text{ Hz}$) and AC room lighting ($120\text{ Hz}$) do not resonate with the pre-computed coefficient $C$, their resultant magnitude $M^2$ approaches zero. Only the specific $2\text{kHz}$ IR flashes generate a massive magnitude spike, allowing the system to completely reject solar interference mathematically.
+\begin{table}[htbp]
+\caption{System Performance Comparison (44-Byte Sentence)}
+\label{tab:bps}
+\centering
+\begin{tabular}{|l|c|c|l|}
+\hline
+\textbf{Receiver Phase} & \textbf{Time (s)} & \textbf{Bitrate (bps)} & \textbf{Environment} \\ \hline
+Phase I (LDR)           & 101.8             & 3.46                   & Dark/Indoor only     \\ \hline
+Phase II (Standard IR)  & 81.4              & 4.32                   & Indoor (Non-Solar)   \\ \hline
+Phase III (Modulated)   & 81.4              & 4.32                   & \textbf{Direct Sunlight} \\ \hline
+\end{tabular}
+\end{table}
 
-\section{Experimental Results and Conclusion}
-The integration of impedance-tuned hardware and DSP software yielded profound improvements. As illustrated in Fig. \ref{fig:graph}, the visible light baseline failed abruptly at 27 cm. The unoptimized IR setup ($10\text{k}\Omega$) reached 47 cm. The fully optimized IR-SDM setup ($1\text{M}\Omega$) successfully maintained 100\% decoding accuracy up to 157 cm indoors. Furthermore, the Phase III Goertzel algorithm proved that low-cost microcontrollers can effectively reject severe solar DC bias without requiring specialized TSOP hardware filters, paving the way for robust, software-defined optical telemetry.
+As shown in Table \ref{tab:bps}, Phase III maintains the peak bitrate of 4.32 bps even in high-solar environments where Phase I and II systems experience complete signal saturation and $<10$\% decoding accuracy.
+
+\subsection{Range Analysis}
+The integration of impedance-tuned hardware with software-defined filtering yielded profound improvements. As illustrated in Fig. \ref{fig:graph}, the visible light baseline failed abruptly at 27 cm. The unoptimized IR setup ($10\text{k}\Omega$) reached 47 cm. The fully optimized IR-SDM setup ($1\text{M}\Omega$) successfully maintained 100\% decoding accuracy up to 157 cm indoors. 
 
 \begin{figure}[htbp]
     \centering
@@ -216,6 +271,12 @@ The integration of impedance-tuned hardware and DSP software yielded profound im
     \caption{Comparative analysis of decoding accuracy over distance across the configurations.}
     \label{fig:graph}
 \end{figure}
+
+\section{Conclusion and Future Work}
+This paper presented an evolutionary approach to overcoming the physical layer limitations of low-cost optical wireless communication. By systematically advancing from a basic visible light LDR circuit to an Infrared Stepwise Derivative Method (SDM), we mitigated indoor thermal noise and extended range. Ultimately, we addressed the critical challenge of direct solar DC saturation by transforming the microcontroller into a software-defined radio. Utilizing a 2kHz OOK modulation scheme paired with an optimized Goertzel digital bandpass filter, the system successfully isolated optical telemetry from severe ambient interference without relying on specialized commercial hardware filters.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
 
 % \appendices
 % \section{Phase I: Visible Light Source Code}
@@ -490,8 +551,5 @@ The integration of impedance-tuned hardware and DSP software yielded profound im
   % }
 % }
 % \end{lstlisting}
-
-\bibliographystyle{IEEEtran}
-\bibliography{references}
 
 \end{document}

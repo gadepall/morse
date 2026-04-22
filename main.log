@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.3.19)  23 MAR 2026 14:28
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.3.19)  22 APR 2026 16:16
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -933,12 +933,16 @@ Package hyperref Info: Link coloring OFF on input line 35.
 Package pgfplots notification 'compat/show suggested version=true': you might b
 enefit from \pgfplotsset{compat=1.18} (current compat level: 1.17).
 
-LaTeX Font Info:    Trying to load font information for U+msa on input line 105
+
+Underfull \vbox (badness 1342) has occurred while \output is active []
+
+LaTeX Font Info:    Trying to load font information for U+msa on input line 107
 .
+
 (c:/texlive/2026/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 105
+LaTeX Font Info:    Trying to load font information for U+msb on input line 107
 .
 
 (c:/texlive/2026/texmf-dist/tex/latex/amsfonts/umsb.fd
@@ -949,11 +953,21 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 
 ]
 LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 1
-66.
+91.
  (c:/texlive/2026/texmf-dist/tex/latex/psnfss/ot1pcr.fd
 File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
 )
-[2] (./main.bbl)
+[2]
+Overfull \hbox (6.3424pt too wide) in paragraph at lines 237--244
+ [][] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 249--250
+[]\OT1/ptm/m/n/10 The in-te-gra-tion of impedance-tuned hard-ware with
+ []
+
+(./main.bbl [3])
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -965,20 +979,22 @@ Before submitting the final camera ready copy, remember to:
  uses only Type 1 fonts and that every step in the generation
  process uses the appropriate paper size.
 
-[3] (./main.aux)
+[4
+
+] (./main.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 5A0EEB88FAFE93386F28B949318BCE33;3339.
+(rerunfilecheck)             Checksum: 3E22371D6940DF086AF5C7E0D9DA50F6;4101.
  ) 
 Here is how much of TeX's memory you used:
- 35649 strings out of 467525
- 836273 string characters out of 5423209
- 1533401 words of memory out of 5000000
- 63979 multiletter control sequences out of 15000+600000
- 662681 words of font info for 101 fonts, out of 8000000 for 9000
+ 35693 strings out of 467525
+ 836835 string characters out of 5423209
+ 1535401 words of memory out of 5000000
+ 64008 multiletter control sequences out of 15000+600000
+ 667983 words of font info for 116 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  84i,21n,94p,1001b,2259s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb><c:/tex
@@ -986,16 +1002,17 @@ live/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><c:/texlive/2026
 /texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb><c:/texlive/2026/texmf-dis
 t/fonts/type1/public/amsfonts/cm/cmr10.pfb><c:/texlive/2026/texmf-dist/fonts/ty
 pe1/public/amsfonts/cm/cmr7.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/
-amsfonts/cm/cmsy10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/
-cm/cmsy7.pfb><c:/texlive/2026/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb><c:
-/texlive/2026/texmf-dist/fonts/type1/urw/times/utmb8a.pfb><c:/texlive/2026/texm
-f-dist/fonts/type1/urw/times/utmbi8a.pfb><c:/texlive/2026/texmf-dist/fonts/type
-1/urw/times/utmr8a.pfb><c:/texlive/2026/texmf-dist/fonts/type1/urw/times/utmri8
-a.pfb>
-Output written on main.pdf (3 pages, 154052 bytes).
+amsfonts/cm/cmr8.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm
+/cmsy10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pf
+b><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb><c:/texl
+ive/2026/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb><c:/texlive/2026/texmf-d
+ist/fonts/type1/urw/times/utmb8a.pfb><c:/texlive/2026/texmf-dist/fonts/type1/ur
+w/times/utmbi8a.pfb><c:/texlive/2026/texmf-dist/fonts/type1/urw/times/utmr8a.pf
+b><c:/texlive/2026/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
+Output written on main.pdf (4 pages, 178501 bytes).
 PDF statistics:
- 180 PDF objects out of 1000 (max. 8388607)
- 149 compressed objects within 2 object streams
- 36 named destinations out of 1000 (max. 500000)
- 141 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 223 PDF objects out of 1000 (max. 8388607)
+ 187 compressed objects within 2 object streams
+ 43 named destinations out of 1000 (max. 500000)
+ 173 words of extra memory for PDF output out of 10000 (max. 10000000)
 

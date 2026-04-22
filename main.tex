@@ -125,6 +125,23 @@ To ensure reproducibility, the system was tested using standard off-the-shelf co
 
 \subsection{Baud Rate and Telemetry Applicability}
 Morse code, utilizing OOK, possesses a fundamentally low baud rate compared to modern digital modulation schemes like UART or QAM. However, for specialized telemetry applications—such as underwater optical communication or low-cost sensor nodes—signal penetration and robustness take precedence over raw speed. The widened tolerance windows used in this paper's decoding logic demonstrate how low baud rate systems can reliably reconstruct highly degraded signals \cite{uysal2015}.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[scale=1]
+        % Axes
+        \draw[->] (0,0) -- (6,0) node[right] {Time};
+        \draw[->] (0,-0.5) -- (0,1.5) node[above] {Amplitude};
+        
+        % Logic Envelope (Dashed)
+        \draw[blue, thick] (0,0) -- (1,0) -- (1,1) -- (3,1) -- (3,0) -- (4,0) -- (4,1) -- (5,1) -- (5,0);
+        \node[gray, scale=0.8] at (2,1.2) {Morse 'N' Envelope (-.)};
+
+\end{tikzpicture}
+    \caption{Standard Morse Code for Character 'N'}
+    \label{fig:morse_n}
+\end{figure}
+
 \section{Phase I: Visible Light Baseline}
 
 \subsection{Circuit Implementation}

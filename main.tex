@@ -34,9 +34,10 @@
 
 \begin{document}
 
-\title{Adaptive Optical Telemetry: Evolving from Visible Light Baselines to Infrared Stepwise Derivative Thresholding and Goertzel Filtering}
+\title{A Morse Code based Optical Communication System}
+%\title{Adaptive Optical Telemetry: Evolving from Visible Light Baselines to Infrared Stepwise Derivative Thresholding and Goertzel Filtering}
 
-\author{\IEEEauthorblockN{Kartik Lahoti, Puni Aditya}
+\author{\IEEEauthorblockN{Kartik Lahoti, Puni Aditya and G V V Sharma}
 \IEEEauthorblockA{\textit{Department of Electrical Engineering} \\
 \textit{IIT Hyderabad}}
 }
@@ -44,7 +45,17 @@
 \maketitle
 
 \begin{abstract}
-Optical wireless communication offers a license-free alternative to Radio Frequency (RF) systems. However, simple visible light links utilizing Light Dependent Resistors (LDRs) face significant challenges regarding ambient light interference and hardware latency. This paper outlines a comprehensive multi-stage development of a Morse Code On-Off Keying (OOK) system. Phase I establishes a baseline Visible Light Communication (VLC) link, documenting a maximum range of 27 cm and identifying the ``Iceberg Effect'' of signal truncation. Phase II introduces the transition to the Infrared (IR) spectrum coupled with a Stepwise Derivative Method (SDM) for adaptive thresholding, extending the range to 1.57 meters indoors. Finally, Phase III addresses the critical limitation of direct solar interference by implementing a fully software-defined 2kHz carrier wave and a digital Goertzel filter, successfully rejecting DC solar saturation without requiring complex commercial hardware filters.
+%Optical wireless communication offers a license-free alternative to Radio Frequency (RF) systems. However, simple visible light links utilizing Light Dependent Resistors (LDRs) face significant challenges regarding ambient light interference and hardware latency. 
+This paper outlines a comprehensive multi-stage development of a Morse Code On-Off Keying (OOK) system. We first establish a baseline Visible Light Communication (VLC) link to demonstrate the fundamental principles of communication over an optical link.  
+%, documenting a maximum range of 27 cm and identifying the ``Iceberg Effect'' of signal truncation. 
+Subsequently, 
+%Phase II 
+we introduce 
+%the transition to the 
+Infrared (IR) 
+communication to extend the range and explore more advanced techniques to improve the system performance.
+This is done by using the Arduino as the transceiver platform.  Our communication scheme is successfully demonstrated for a range of upto 2 metres.
+%spectrum coupled with a Stepwise Derivative Method (SDM) for adaptive thresholding, extending the range to 1.57 meters indoors. Finally, Phase III addresses the critical limitation of direct solar interference by implementing a fully software-defined 2kHz carrier wave and a digital Goertzel filter, successfully rejecting DC solar saturation without requiring complex commercial hardware filters.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -57,11 +68,8 @@ Wireless optical communication is highly dependent on clear Line-of-Sight (LoS) 
 The novelty of this paper lies in its evolutionary approach to solving these physical layer limitations, building upon foundational On-Off Keying (OOK) optical paradigms \cite{komine2004}. We first establish a baseline VLC system to document the hardware-induced signal degradation known as the ``Iceberg Effect.'' Following this, we introduce an advanced Infrared (IR) iteration. The core innovation of this second phase is the Stepwise Derivative Method (SDM), a software-defined signal processing algorithm that tracks the environmental noise floor \cite{green2005}. Finally, to overcome severe outdoor solar interference \cite{rajagopal2012}, we introduce a Goertzel algorithm-based digital signal processing (DSP) approach, effectively turning the low-cost microcontroller into a software-defined radio for optical frequencies.
 
 \subsection{Related Works and Novelty}
-Standard commercial IR systems avoid ambient noise by utilizing 38kHz Carrier Waves and specialized TSOP receiver modules. While effective, these modules act as ``black boxes'' that strip the analog signal data away from the microcontroller, preventing custom low-level signal analysis. Conversely, standard unmodulated photodiode circuits use fixed analog thresholds that fail the moment room lighting changes. Our proposed SDM and Goertzel implementations bridge this gap, retaining raw analog sampling while applying dynamic digital filters to reject ambient DC bias. 
-
-\subsection{Baud Rate and Telemetry Applicability}
-Morse code, utilizing OOK, possesses a fundamentally low baud rate compared to modern digital modulation schemes like UART or QAM. However, for specialized telemetry applications—such as underwater optical communication or low-cost sensor nodes—signal penetration and robustness take precedence over raw speed. The widened tolerance windows used in this paper's decoding logic demonstrate how low baud rate systems can reliably reconstruct highly degraded signals \cite{uysal2015}.
-
+Standard commercial IR systems avoid ambient noise by utilizing 38kHz Carrier Waves and specialized TSOP receiver modules. While effective, these modules act as ``black boxes'' that strip the analog signal data away from the microcontroller, preventing custom low-level signal analysis. Conversely, standard unmodulated photodiode circuits use fixed analog thresholds that fail the moment room lighting changes. Our proposed SDM and Goertzel implementations bridge this gap, retaining raw analog sampling while applying dynamic digital filters to reject ambient DC bias. The related block diagram is available in 
+    Fig. \ref{fig:block}
 \begin{figure}[htbp]
     \centering
     \resizebox{\columnwidth}{!}{
@@ -96,10 +104,8 @@ Morse code, utilizing OOK, possesses a fundamentally low baud rate compared to m
     \caption{System Block Diagram detailing the cross-layer flow from hardware transmission to the software-defined filtering and hardware output.}
     \label{fig:block}
 \end{figure}
-
-\section{Hardware Configuration}
+%\section{Hardware Configuration}
 To ensure reproducibility, the system was tested using standard off-the-shelf components. The development was split into two hardware profiles as detailed in Table \ref{tab:components}.
-
 \begin{table}[htbp]
 \caption{List of Components}
 \label{tab:components}
@@ -117,13 +123,15 @@ To ensure reproducibility, the system was tested using standard off-the-shelf co
 \end{tabular}
 \end{table}
 
+\subsection{Baud Rate and Telemetry Applicability}
+Morse code, utilizing OOK, possesses a fundamentally low baud rate compared to modern digital modulation schemes like UART or QAM. However, for specialized telemetry applications—such as underwater optical communication or low-cost sensor nodes—signal penetration and robustness take precedence over raw speed. The widened tolerance windows used in this paper's decoding logic demonstrate how low baud rate systems can reliably reconstruct highly degraded signals \cite{uysal2015}.
 \section{Phase I: Visible Light Baseline}
 
 \subsection{Circuit Implementation}
 The baseline system operates entirely in the visible spectrum. 
 \begin{itemize}
-    \item \textbf{Transmitter (TX):} An Arduino microcontroller drives a standard visible LED. The LED's anode connects to Digital Pin 5, while the cathode is grounded through a $220\Omega$ current-limiting resistor. 
-    \item \textbf{Receiver (RX):} The optical sensor is a Light Dependent Resistor (LDR) arranged in a voltage divider. The 5V supply is connected to one leg of the LDR. The secondary leg connects to the Arduino's Analog Pin A0 and a $10\text{k}\Omega$ pull-down resistor connected to ground. 
+    \item {Transmitter (TX):} An Arduino microcontroller drives a standard visible LED. The LED's anode connects to Digital Pin 5, while the cathode is grounded through a $220\Omega$ current-limiting resistor. 
+    \item {Receiver (RX):} The optical sensor is a Light Dependent Resistor (LDR) arranged in a voltage divider. The 5V supply is connected to one leg of the LDR. The secondary leg connects to the Arduino's Analog Pin A0 and a $10\text{k}\Omega$ pull-down resistor connected to ground. 
 \end{itemize}
 
 \subsection{Hardware Latency and The ``Iceberg Effect''}

@@ -187,7 +187,7 @@ This baseband square wave serves as the fundamental logic envelope for all subse
 
 
 
-\section{Phase I: Visible Light Baseline}
+\section{Visible Light Baseline}
 
 \subsection{Circuit Implementation}
 The baseline system operates entirely in the visible spectrum. 
@@ -197,7 +197,10 @@ The baseline system operates entirely in the visible spectrum.
 \end{itemize}
 
 \subsection{Hardware Latency and The ``Iceberg Effect''}
-When bridging analog optical sensing and digital microcontrollers, signal truncation occurs. As shown in Fig. \ref{fig:iceberg}, an expected ``Dah'' signal transmitted for 600ms is detected for a fraction of that time. LDRs exhibit notable rise/fall latency, resulting in a trapezoidal curve. To counteract this, our receiver employs widened tolerance windows.
+When bridging analog optical sensing and digital microcontrollers, signal truncation occurs. As shown in Fig. \ref{fig:iceberg}, an expected ``Dah'' signal transmitted for 600ms is detected for a fraction of that time. LDRs exhibit notable rise/fall latency, resulting in a trapezoidal curve. To counteract this, our receiver employs widened tolerance windows as listed in 
+Table
+\ref{tab:morse_timing-modified}.
+.
 \begin{figure}[htbp]
     \centering
     \resizebox{\columnwidth}{!}{
@@ -224,7 +227,7 @@ When bridging analog optical sensing and digital microcontrollers, signal trunca
 
 \begin{table}[htbp]
 \caption{Adaptive Morse Protocol Timings to combat "Iceberg Effect"}
-\label{tab:morse_timing}
+\label{tab:morse_timing-modified}
 \centering
 \begin{tabular}{|l|c|l|}
 \hline
@@ -243,13 +246,13 @@ Inter-word gap            & LOW (OFF)            &  $1600\text{ ms}$ \\ \hline
 \subsection{Visible Light Results}
 The baseline system achieved a maximum reliable transmission distance of only 11-12 cm in room light, and 27 cm in total darkness.
 
-\section{Phase II: Infrared Evolution and SDM}
+\section{Infrared Evolution and SDM}
 
 \subsection{Circuit Implementation}
-To resolve the noise and range issues of Phase I, the physical layer was upgraded to a 940nm Infrared (IR) ecosystem.
+To resolve the noise and range issues of the baseline VLC system, the physical layer was upgraded to a 940nm Infrared (IR) ecosystem.
 \begin{itemize}
-    \item \textbf{Transmitter (TX):} The visible LED is replaced by an IR LED. 
-    \item \textbf{Receiver (RX) Sensor:} A high-speed IR photodiode replaces the LDR, operating in reverse-bias mode. The cathode connects to 5V, and the anode connects to Analog Pin A0 and a pull-down load resistor ($R_L$) to ground.
+    \item {Transmitter (TX):} The visible LED is replaced by an IR LED. 
+    \item {Receiver (RX) Sensor:} A high-speed IR photodiode replaces the LDR, operating in reverse-bias mode. The cathode connects to 5V, and the anode connects to Analog Pin A0 and a pull-down load resistor ($R_L$) to ground.
 \end{itemize}
 
 \subsection{Hardware Optimization and SDM}

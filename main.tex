@@ -127,10 +127,26 @@ To ensure reproducibility, the system was tested using standard off-the-shelf co
 Morse code, utilizing OOK, possesses a fundamentally low baud rate compared to modern digital modulation schemes like UART or QAM. However, for specialized telemetry applications—such as underwater optical communication or low-cost sensor nodes—signal penetration and robustness take precedence over raw speed. The widened tolerance windows used in this paper's decoding logic demonstrate how low baud rate systems can reliably reconstruct highly degraded signals \cite{uysal2015}.
 
 \subsection{Baseband Morse Encoding}
-To establish a quantitative baseline for On-Off Keying (OOK) modulation, the system utilizes the standard international Morse code protocol. In this telemetry model, the transmitter's digital output pin toggles between a HIGH (active) and LOW (idle) state to construct characters based on a strict 1:3 temporal ratio. 
+To establish a quantitative baseline for On-Off Keying (OOK) modulation, the system utilizes the standard international Morse code protocol. In this telemetry model, the transmitter's digital output pin toggles between a HIGH (active) and LOW (idle) state to construct characters. 
 
-Defining a single ``dit'' (dot) as one base time unit ($T_u = 200\text{ ms}$), a ``dah'' (dash) is defined as exactly $3 T_u$. As illustrated in Fig. \ref{fig:morse_an} for the transmission of the word ``AN'', the intra-character gap separating pulses within a single letter is $1 T_u$, while the inter-character gap separating distinct letters is $3 T_u$. Inter-word gaps (not shown) require $7 T_u$. This variable-length baseband square wave serves as the fundamental logic envelope for all subsequent experimental phases.
+The protocol defines all signal durations relative to a single base time unit ($T_u$), which in our experimental setup is set to $200\text{ ms}$. The strict timing rules governing this variable-length baseband modulation are detailed in Table \ref{tab:morse_timing}. 
 
+\begin{table}[htbp]
+\caption{Standard Morse Protocol Timings ($T_u = 200\text{ ms}$)}
+\label{tab:morse_timing}
+\centering
+\begin{tabular}{|l|c|l|}
+\hline
+\textbf{Protocol Element} & \textbf{Logic State} & \textbf{Duration} \\ \hline
+Dot (Dit)                 & HIGH (ON)            & 1 $T_u$ ($200\text{ ms}$) \\ \hline
+Dash (Dah)                & HIGH (ON)            & 3 $T_u$ ($600\text{ ms}$) \\ \hline
+Intra-character gap       & LOW (OFF)            & 1 $T_u$ ($200\text{ ms}$) \\ \hline
+Inter-character gap       & LOW (OFF)            & 3 $T_u$ ($600\text{ ms}$) \\ \hline
+Inter-word gap            & LOW (OFF)            & 7 $T_u$ ($1400\text{ ms}$) \\ \hline
+\end{tabular}
+\end{table}
+
+This baseband square wave serves as the fundamental logic envelope for all subsequent experimental phases. A visual representation of these timing constraints is illustrated in Fig. \ref{fig:morse_an} for the transmission of the word "AN".
 \begin{figure}[htbp]
     \centering
     \resizebox{\columnwidth}{!}{

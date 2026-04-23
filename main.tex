@@ -185,6 +185,8 @@ This baseband square wave serves as the fundamental logic envelope for all subse
     \label{fig:morse_an}
 \end{figure}
 
+
+
 \section{Phase I: Visible Light Baseline}
 
 \subsection{Circuit Implementation}
@@ -196,7 +198,6 @@ The baseline system operates entirely in the visible spectrum.
 
 \subsection{Hardware Latency and The ``Iceberg Effect''}
 When bridging analog optical sensing and digital microcontrollers, signal truncation occurs. As shown in Fig. \ref{fig:iceberg}, an expected ``Dah'' signal transmitted for 600ms is detected for a fraction of that time. LDRs exhibit notable rise/fall latency, resulting in a trapezoidal curve. To counteract this, our receiver employs widened tolerance windows.
-
 \begin{figure}[htbp]
     \centering
     \resizebox{\columnwidth}{!}{
@@ -220,6 +221,24 @@ When bridging analog optical sensing and digital microcontrollers, signal trunca
     \caption{The ``Iceberg Effect'' illustrating temporal truncation caused by improper static thresholding of an LDR signal.}
     \label{fig:iceberg}
 \end{figure}
+
+\begin{table}[htbp]
+\caption{Adaptive Morse Protocol Timings to combat "Iceberg Effect"}
+\label{tab:morse_timing}
+\centering
+\begin{tabular}{|l|c|l|}
+\hline
+\textbf{Protocol Element} & \textbf{Logic State} & \textbf{Duration} \\ \hline
+Dot (Dit)                 & HIGH (ON)            &  $150\text{ ms}$ \\ \hline
+Dash (Dah)                & HIGH (ON)            &  $450\text{ ms}$ \\ \hline
+Intra-character gap       & LOW (OFF)            &  $350\text{ ms}$ \\ \hline
+Inter-character gap       & LOW (OFF)            &  $750\text{ ms}$ \\ \hline
+Inter-word gap            & LOW (OFF)            &  $1600\text{ ms}$ \\ \hline
+\end{tabular}
+\end{table}
+
+
+
 
 \subsection{Visible Light Results}
 The baseline system achieved a maximum reliable transmission distance of only 11-12 cm in room light, and 27 cm in total darkness.
@@ -258,6 +277,8 @@ The term \textbf{``chopping''} refers to this process of breaking a continuous D
 \end{itemize}
 This separation allows the receiver to ignore the saturated 0Hz baseline and focus entirely on the energy oscillating at the target frequency band. This is implemented in software using the \texttt{tone()} function, which leverages the microcontroller's internal timers to generate a precise square wave.
 Furthermore, operating the LED at a 50% duty cycle reduces the active transmission power consumption by half compared to the continuous DC pulses of Phase II, highly benefiting battery-constrained remote sensor nodes.
+
+
 
 \begin{figure}[htbp]
     \centering

@@ -184,7 +184,12 @@ This baseband square wave serves as the fundamental logic envelope for all subse
     \label{fig:morse_an}
 \end{figure}
 
-
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\columnwidth]{figs/circuit.jpeg}
+    \caption{Circuit Diagram}
+    \label{fig:ckt}
+\end{figure}
 
 \section{Visible Light Baseline}
 
@@ -251,6 +256,25 @@ To resolve the noise and range issues of the baseline VLC system, the physical l
     \item Transmitter (TX): The visible LED is replaced by an IR LED. 
     \item Receiver (RX) Sensor: A high-speed IR photodiode replaces the LDR, operating in reverse-bias mode. The cathode connects to 5V, and the anode connects to Analog Pin A0 and a pull-down load resistor ($R_L$) to ground.
 \end{itemize}
+
+\subsection{Hardware Impedance and Range Comparison}
+To highlight the impact of hardware impedance on signal recovery, Table \ref{tab:res_vs_dist} compares the maximum reliable transmission distances across the initial configurations. The visible light baseline (LDR) failed abruptly at 27 cm using a $10\text{k}\Omega$ pull-down resistor. Transitioning to an unoptimized IR setup with the same $10\text{k}\Omega$ load yielded only a marginal improvement to approximately 50 cm (47 cm). However, by upgrading the load resistor to $1\text{M}\Omega$, the optimized IR-SDM setup successfully extended the range to nearly 2 meters (157 cm) indoors. Frequency-Modulated IR (discussed in Section IV) maintained this performance with slightly better robustness.
+
+\begin{table}[htbp]
+\caption{Maximum Reliable Distance vs. Load Resistance}
+\label{tab:res_vs_dist}
+\centering
+\begin{tabular}{|l|c|l|}
+\hline
+\textbf{Configuration} & \textbf{Load Resistor ($R_L$)} & \textbf{Maximum Range} \\ \hline
+Visible Light & 10 k$\Omega$ & 27 cm \\ 
+(LDR) & & \\ \hline
+Baseband IR & 10 k$\Omega$ & $\approx$ 50 cm (47 cm) \\ \hline
+Baseband IR & 1 M$\Omega$ & $\approx$ 2 m (157 cm) \\ \hline
+Frequency- & 1 M$\Omega$ & $>$ 2 m (Slightly better) \\ 
+Modulated IR & & \\ \hline
+\end{tabular}
+\end{table}
 
 \subsection{Hardware Optimization and SDM}
 Operating in reverse-bias, the photodiode produces a photocurrent ($I_{pd}$) proportional to the incident photon flux; consequently, the voltage sampled by the ADC is governed by $V_{adc} = I_{pd} \times R_L$. By increasing $R_L$ from $10\text{k}\Omega$ to $1\text{M}\Omega$, sensitivity was maximized, extending the raw range to 1.57 meters indoors.

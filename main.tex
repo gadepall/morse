@@ -104,6 +104,7 @@ Standard commercial IR systems avoid ambient noise by utilizing 38kHz Carrier Wa
     \label{fig:block}
 \end{figure}
 %\section{Hardware Configuration}
+
 To ensure reproducibility, the system was tested using standard off-the-shelf components. The development was split into two hardware profiles as detailed in Table \ref{tab:components}.
 \begin{table}[htbp]
 \caption{List of Components}
@@ -114,6 +115,7 @@ To ensure reproducibility, the system was tested using standard off-the-shelf co
 \textbf{Setup} & \textbf{Components} \\ \hline
 \textbf{Common} & 2$\times$ Arduino UNO, \\
 &  2$\times$ Breadboards, \\
+& Resistors, \\
 & Jumper Cables \\ \hline
 \textbf{Visible} & 1$\times$ Red LED ($5\text{mm}$), \\
 & 1$\times$ LDR ($5\text{mm}$) \\ \hline
@@ -186,8 +188,7 @@ This baseband square wave serves as the fundamental logic envelope for all subse
 \end{figure}
 
 \subsection{Hardware Setup}
-    Fig. \ref{fig:ckt}
-    shows the transceiver configuration used for various cases.  
+    Fig. \ref{fig:ckt} shows the transceiver configuration used for various cases.  
 \begin{itemize}
     \item Transmitter (TX): An Arduino microcontroller drives a standard visible/IR LED. The LED's anode connects to Digital Pin 5, while the cathode is grounded through a $220\Omega$ current-limiting resistor. 
     \item Receiver (RX): The optical sensor is a Light Dependent Resistor (LDR)/IR receiver (connected in reverse bias) arranged in a voltage divider. The 5V supply is connected to one leg of the receiver. The secondary leg connects to the Arduino's Analog Pin A0 and a pull-down resistor ($R$) connected to ground. 
@@ -207,7 +208,7 @@ Table \ref{tab:res_vs_dist}.
 \centering
 \begin{tabular}{|l|c|l|}
 \hline
-\textbf{Configuration} & \textbf{Load Resistor ($R_L$)} & \textbf{Maximum Range} \\ \hline
+\textbf{Configuration} & \textbf{Load Resistor ($R$)} & \textbf{Maximum Range} \\ \hline
 Visible Light & 10 k$\Omega$ & 27 cm \\ 
 (LDR) & & \\ \hline
 Baseband IR & 10 k$\Omega$ & $\approx$ 50 cm (47 cm) \\ \hline
@@ -217,11 +218,11 @@ Modulated IR & & \\ \hline
 \end{tabular}
 \end{table}
 
-\section{Visible Light Baseline}
+\section{Communication System}
 
-\subsection{Circuit Implementation}
-The baseline system operates entirely in the visible spectrum. 
-\subsection{Hardware Latency and The "Iceberg Effect"}
+\subsection{Visible Light Baseline}
+
+\subsubsection{Hardware Latency and The "Iceberg Effect"}
 When bridging analog optical sensing and digital microcontrollers, signal truncation occurs. As shown in Fig. \ref{fig:iceberg}, an expected "Dah" signal transmitted for 600ms is detected for a fraction of that time. LDRs exhibit notable rise/fall latency, resulting in a trapezoidal curve. To counteract this, our receiver employs widened tolerance windows as listed in Table \ref{tab:morse_timing-modified}.
 
 \begin{figure}[htbp]
@@ -266,23 +267,13 @@ Inter-word gap            & LOW (OFF)            &  $1600\text{ ms}$ \\ \hline
 
 
 
-\subsection{Visible Light Results}
+\subsubsection{Visible Light Results}
 The baseline system achieved a maximum reliable transmission distance of only 11-12 cm in room light, and 27 cm in total darkness.
 
-\section{Infrared Evolution and SDM}
+\subsection{Infrared Evolution and SDM}
 
-\subsection{Circuit Implementation}
-To resolve the noise and range issues of the baseline VLC system, the physical layer was upgraded to a 940-nm Infrared (IR) ecosystem.
-\begin{itemize}
-    \item Transmitter (TX): The visible LED is replaced by an IR LED. 
-    \item Receiver (RX) Sensor: A high-speed IR photodiode replaces the LDR, operating in reverse-bias mode. The cathode connects to 5V, and the anode connects to Analog Pin A0 and a pull-down load resistor ($R_L$) to ground.
-\end{itemize}
-
-\subsection{Hardware Impedance and Range Comparison}
-To highlight the impact of hardware impedance on signal recovery, Table \ref{tab:res_vs_dist} compares the maximum reliable transmission distances across the initial configurations. The visible light baseline (LDR) failed abruptly at 27 cm using a $10\text{k}\Omega$ pull-down resistor. Transitioning to an unoptimized IR setup with the same $10\text{k}\Omega$ load yielded only a marginal improvement to approximately 50 cm (47 cm). However, by upgrading the load resistor to $1\text{M}\Omega$, the optimized IR-SDM setup successfully extended the range to nearly 2 meters (157 cm) indoors. Frequency-Modulated IR (discussed in Section IV) maintained this performance with slightly better robustness.
-
-\subsection{Hardware Optimization and SDM}
-Operating in reverse-bias, the photodiode produces a photocurrent ($I_{pd}$) proportional to the incident photon flux; consequently, the voltage sampled by the ADC is governed by $V_{adc} = I_{pd} \times R_L$. By increasing $R_L$ from $10\text{k}\Omega$ to $1\text{M}\Omega$, sensitivity was maximized, extending the raw range to 1.57 meters indoors.
+\subsubsection{Hardware Optimization and SDM}
+Operating in reverse-bias, the photodiode produces a photocurrent ($I_{pd}$) proportional to the incident photon flux; consequently, the voltage sampled by the ADC is governed by $V_{adc} = I_{pd} \times R$. By increasing $R$ from $10\text{k}\Omega$ to $1\text{M}\Omega$, sensitivity was maximized, extending the raw range to 1.57 meters indoors.
 
 To isolate transmission pulses from fluctuating indoor IR noise, we developed the Stepwise Derivative Method (SDM). The core challenge is that the "dark" voltage of a photodiode is not zero; it is a floating DC offset that changes as room lights are toggled. To address this, the algorithm first calculates a moving average to capture the slow-moving ambient noise floor. This part of the algorithm functions inherently as a low-pass filter:
 
@@ -303,21 +294,21 @@ The final detection threshold is then defined dynamically above the noise floor:
 \end{align}
 Where $\sigma$ is a static signal margin constant. This ensures the "Detection Zone" floats above the noise floor, maintaining a constant sensitivity regardless of ambient brightness.
 
-\subsection{SDM Initialization and Training Sequence}
+\subsubsection{SDM Initialization and Training Sequence}
 Because the rolling buffer requires a stabilization period to accurately map the ambient noise floor, the system mandates an initialization phase prior to data transmission. During this phase, a known training sequence—the phrase "HELLO WORLD"—is transmitted 10 times. 
 
 Based on the timing ratios defined in Table \ref{tab:morse_timing}, a single transmission of "HELLO WORLD" consumes exactly 111 $T_u$ (inclusive of all intra-character, inter-character, and inter-word gaps). Therefore, the full 10-cycle training sequence spans 1110 $T_u$. Given our baseline $T_u = 200\text{ ms}$, this equates to a deliberate 222-second pre-transmission window. This ensures the SDM buffer ($V_{noise}$) fully saturates with representative environmental data, allowing the dynamic noise margin to settle completely before the receiver attempts to decode unknown payload characters.
 
-\section{Frequency Modulation and Software-Defined Filtering}
+\subsection{Frequency Modulation and Software-Defined Filtering}
 
-\subsection{Limitations in Direct Sunlight and Hardware Gain Control}
+\subsubsection{Limitations in Direct Sunlight and Hardware Gain Control}
 While the initial IR setup successfully mitigated indoor noise, it typically fails in direct sunlight. The sun acts as a high-intensity IR emitter, causing the photodiode to produce a massive steady-state photocurrent. This threatens to saturate the 10-bit ADC at a constant 1023, effectively "blinding" the receiver and removing the dynamic range necessary for processing.
 
-To prevent "hard" saturation, the receiver's load resistor ($R_L$) is decreased (e.g., from $1\text{M}\Omega$ to $10\text{k}\Omega$) when operating outdoors. While this keeps the DC component within the ADC's measurable range, it significantly reduces the signal-to-noise ratio (SNR), as the intentional AC pulses become minute fluctuations on a massive DC floor. This necessitates a transition to a frequency-domain detection approach to isolate the signal. 
+To prevent "hard" saturation, the receiver's load resistor ($R$) is decreased (e.g., from $1\text{M}\Omega$ to $10\text{k}\Omega$) when operating outdoors. While this keeps the DC component within the ADC's measurable range, it significantly reduces the signal-to-noise ratio (SNR), as the intentional AC pulses become minute fluctuations on a massive DC floor. This necessitates a transition to a frequency-domain detection approach to isolate the signal. 
 
-By reducing $R_L$, we trade off raw voltage swing for headroom, relying on the high-gain nature of the Goertzel algorithm to recover the attenuated signal from the resulting narrow dynamic range.
+By reducing $R$, we trade off raw voltage swing for headroom, relying on the high-gain nature of the Goertzel algorithm to recover the attenuated signal from the resulting narrow dynamic range.
 
-\subsection{2~kHz On-Off Keying (OOK) Modulation}
+\subsubsection{2~kHz On-Off Keying (OOK) Modulation}
 To resolve solar saturation, we transition to a Software-Defined Optical paradigm. Instead of a static DC pulse, the transmitter modulates the IR LED with a 2~kHz square wave carrier during every Morse "mark" (dit or dah).
 
 This process, acting as a form of subcarrier modulation, involves gating the continuous DC transmission pulse with a high-frequency sequence. By toggling the LED at 2~kHz (a 50\% duty cycle), we effectively perform a frequency-domain shift:
@@ -352,7 +343,7 @@ Furthermore, operating the LED at a 50\% duty cycle reduces the active transmiss
     \label{fig:modulation}
 \end{figure}
 
-\subsection{Sampling and Goertzel Digital Signal Processing}
+\subsubsection{Sampling and Goertzel Digital Signal Processing}
 To detect the 2~kHz carrier without external hardware filters, the receiver's ADC must satisfy the Nyquist theorem (requiring a minimum sampling rate of 4kHz). We modify the \texttt{ADCSRA} register to change the prescaler from 128 to 16, accelerating the sampling rate from $\approx 10\text{kHz}$ to $\approx 60\text{kHz}$, which provides massive oversampling for high-resolution frequency detection.
 
 We then implement the Goertzel algorithm \cite{smith1997} to act as a digital bandpass filter. Unlike a full Fast Fourier Transform (FFT), the Goertzel algorithm is computationally optimized to calculate the magnitude of a single target frequency ($f_{target} = 2000\text{Hz}$), making it ideal for the limited memory of microcontrollers \cite{mitra2006}. 

@@ -4,7 +4,7 @@ int readings[numReadings];
 int readIndex = 0;             
 long total = 0;                
 int averageNoise = 0;          
-const int signalMargin = 40;   // Sensitivity offset above the noise floor
+const int signalMargin = 30;   // Sensitivity offset above the noise floor
 int dynamicThreshold = 0;
 
 // --- Morse Timing Variables ---

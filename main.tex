@@ -275,19 +275,13 @@ Operating in reverse-bias, the photodiode produces a photocurrent ($I_{pd}$) pro
 To isolate transmission pulses from fluctuating indoor IR noise, we developed the Stepwise Derivative Method (SDM). The core challenge is that the "dark" voltage of a photodiode is not zero; it is a floating DC offset that changes as room lights are toggled. To address this, the algorithm first calculates a moving average to capture the slow-moving ambient noise floor. This part of the algorithm functions inherently as a low-pass filter:
 
 \begin{align}
-    V_{noise}[n] = \frac{1}{N} \sum_{i=0}^{N-1} V_{adc}[n-i] \label{eq:noise}
+    V_{noise} = \frac{1}{N} \sum_{i=0}^{N-1} V_{adc}[i] \label{eq:noise}
 \end{align}
 
-The SDM achieves its adaptive high-pass characteristics by subtracting this low-frequency baseline from the raw instantaneous sampled voltage. This derivative-like operation ignores the steady-state DC bias and extracts only the sudden, high-frequency voltage "steps" caused by the transmitter:
+The SDM achieves its adaptive high-pass characteristics by subtracting this low-frequency baseline from the raw instantaneous sampled voltage. This derivative-like operation ignores the steady-state DC bias and extracts only the sudden, high-frequency voltage "steps" caused by the transmitter. The final detection threshold is then defined dynamically above the noise floor:
 
 \begin{align}
-    V_{signal}[n] = V_{adc}[n] - V_{noise}[n] \label{eq:highpass}
-\end{align}
-
-The final detection threshold is then defined dynamically above the noise floor:
-
-\begin{align}
-    V_{threshold}[n] = V_{noise}[n] + \sigma \label{eq:thresh}
+    V_{threshold} = V_{noise} + \sigma \label{eq:thresh}
 \end{align}
 Where $\sigma$ is a static signal margin constant. This ensures the "Detection Zone" floats above the noise floor, maintaining a constant sensitivity regardless of ambient brightness.
 

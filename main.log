@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.3.19)  24 APR 2026 20:47
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.3.19)  24 APR 2026 21:37
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -955,22 +955,22 @@ Package pdftex.def Info: figs/circuit.jpeg  used on input line 200.
 (pdftex.def)             Requested size: 151.20154pt x 116.86806pt.
  [2 <./figs/circuit.jpeg>]
 LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 3
-32.
+26.
 
 (c:/texlive/2026/texmf-dist/tex/latex/psnfss/ot1pcr.fd
 File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
 ) [3]
-Overfull \hbox (13.9584pt too wide) in paragraph at lines 381--389
+Overfull \hbox (13.9584pt too wide) in paragraph at lines 375--383
  [][] 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 394--395
+Underfull \hbox (badness 10000) in paragraph at lines 388--389
 []\OT1/ptm/m/n/10 The in-te-gra-tion of impedance-tuned hard-ware with
  []
 
 
-Underfull \hbox (badness 2111) in paragraph at lines 394--395
+Underfull \hbox (badness 2111) in paragraph at lines 388--389
 \OT1/ptm/m/n/10 abruptly at 27 cm. The un-op-ti-mized IR setup ($\OT1/cmr/m/n/1
 0 10[]
 $\OT1/ptm/m/n/10 )
@@ -999,10 +999,10 @@ Package rerunfilecheck Info: File `main.out' has not changed.
 (rerunfilecheck)             Checksum: E980EA0A2CB03C01BD1E2A48F797E21D;4837.
  ) 
 Here is how much of TeX's memory you used:
- 35730 strings out of 467525
- 837481 string characters out of 5423209
+ 35728 strings out of 467525
+ 837458 string characters out of 5423209
  1537401 words of memory out of 5000000
- 64030 multiletter control sequences out of 15000+600000
+ 64029 multiletter control sequences out of 15000+600000
  669275 words of font info for 118 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  84i,21n,94p,970b,2259s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -1020,10 +1020,10 @@ fonts/type1/urw/courier/ucrr8a.pfb><c:/texlive/2026/texmf-dist/fonts/type1/urw/
 times/utmb8a.pfb><c:/texlive/2026/texmf-dist/fonts/type1/urw/times/utmbi8a.pfb>
 <c:/texlive/2026/texmf-dist/fonts/type1/urw/times/utmr8a.pfb><c:/texlive/2026/t
 exmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on main.pdf (5 pages, 256261 bytes).
+Output written on main.pdf (5 pages, 256169 bytes).
 PDF statistics:
- 271 PDF objects out of 1000 (max. 8388607)
- 228 compressed objects within 3 object streams
- 58 named destinations out of 1000 (max. 500000)
+ 270 PDF objects out of 1000 (max. 8388607)
+ 227 compressed objects within 3 object streams
+ 57 named destinations out of 1000 (max. 500000)
  202 words of extra memory for PDF output out of 10000 (max. 10000000)
 

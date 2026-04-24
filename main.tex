@@ -292,9 +292,25 @@ The final detection threshold is then defined dynamically above the noise floor:
 Where $\sigma$ is a static signal margin constant. This ensures the "Detection Zone" floats above the noise floor, maintaining a constant sensitivity regardless of ambient brightness.
 
 \subsubsection{SDM Initialization and Training Sequence}
-Because the rolling buffer requires a stabilization period to accurately map the ambient noise floor, the system mandates an initialization phase prior to data transmission. During this phase, a known training sequence—the phrase "HELLO WORLD"—is transmitted 10 times. 
+Because the rolling buffer requires a stabilization period to accurately map the ambient noise floor, the system mandates an initialization phase prior to data transmission. Initially, the system starts with an assumed, pre-defined threshold for the signal margin ($\sigma$), detailed in Table \ref{tab:assumed_thresholds}, to bootstrap the detection logic based on the expected ambient environment.During this initialization phase, a known training sequence—the phrase "HELLO WORLD"—is transmitted 10 times. 
 
-Based on the timing ratios defined in Table \ref{tab:morse_timing}, a single transmission of "HELLO WORLD" consumes exactly 111 $T_u$ (inclusive of all intra-character, inter-character, and inter-word gaps). Therefore, the full 10-cycle training sequence spans 1110 $T_u$. Given our baseline $T_u = 200\text{ ms}$, this equates to a deliberate 222-second pre-transmission window. This ensures the SDM buffer ($V_{noise}$) fully saturates with representative environmental data, allowing the dynamic noise margin to settle completely before the receiver attempts to decode unknown payload characters.
+\begin{table}[htbp]
+\caption{Initial Assumed Signal Margins ($\sigma$) Prior to Stabilization (1 M$\Omega$ Setup)}
+\label{tab:assumed_thresholds}
+\centering
+\begin{tabular}{|l|c|l|}
+\hline
+\textbf{Ambient Environment} & \textbf{Assumed Margin ($\sigma$)} & \textbf{ADC Voltage} \\ 
+& & \textbf{Eqv. (5V)} \\ \hline
+Total Darkness & 30 & $\approx 0.15\text{V}$ \\ \hline
+Standard Indoor & 80 & $\approx 0.39\text{V}$ \\ 
+Lighting & & \\ \hline
+High Ambient & 150 & $\approx 0.73\text{V}$ \\ 
+(Near Window)  & & \\ \hline
+\end{tabular}
+\end{table}
+
+Based on the timing ratios defined in Table \ref{tab:morse_timing}, a single transmission of "HELLO WORLD" consumes exactly 111 $T_u$ (inclusive of all intra-character, inter-character, and inter-word gaps). Therefore, the full 10-cycle training sequence spans 1110 $T_u$. Given our baseline $T_u = 200\text{ ms}$, this equates to a deliberate 222-second pre-transmission window. This ensures the SDM buffer ($V_{noise}$) fully saturates with representative environmental data, allowing the dynamic baseline to settle completely alongside the assumed margin before the receiver attempts to decode unknown payload characters.
 
 \subsection{Frequency Modulation and Software-Defined Filtering}
 

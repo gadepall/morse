@@ -255,21 +255,29 @@ To resolve the noise and range issues of the baseline VLC system, the physical l
 \subsection{Hardware Optimization and SDM}
 Operating in reverse-bias, the photodiode produces a photocurrent ($I_{pd}$) proportional to the incident photon flux; consequently, the voltage sampled by the ADC is governed by $V_{adc} = I_{pd} \times R_L$. By increasing $R_L$ from $10\text{k}\Omega$ to $1\text{M}\Omega$, sensitivity was maximized, extending the raw range to 1.57 meters indoors.
 
-% To isolate the transmission pulses from amplified indoor thermal noise, we developed the Stepwise Derivative Method (SDM) \cite{green2005}. The algorithm maintains a rolling buffer of $N=10$ readings to calculate a floating real-time average ($V_{noise}$):
-% Unlike a fixed analog threshold—which triggers falsely if a room light is turned on—the SDM treats ambient light as a shifting DC bias. By maintaining a rolling noise floor ($V_{noise}$), the system ensures that the 'Detection Margin' ($\sigma$) remains constant regardless of the environment. This effectively increases the 'Dynamic Range' of the receiver, allowing it to function in both dark rooms and brightly lit offices without manual recalibration.
-
-To isolate transmission pulses from fluctuating indoor IR noise, we developed the Stepwise Derivative Method (SDM). The core challenge in this method is that the "dark" voltage of a photodiode is not zero; it is a floating DC offset that changes as room lights are toggled. The SDM functions as an adaptive high-pass filter in software. It is "Stepwise" because it updates its baseline at every sampling interval $n$. The algorithm calculates a floating real-time average ($V_{noise}$) representing the ambient environment:
+To isolate transmission pulses from fluctuating indoor IR noise, we developed the Stepwise Derivative Method (SDM). The core challenge is that the "dark" voltage of a photodiode is not zero; it is a floating DC offset that changes as room lights are toggled. To address this, the algorithm first calculates a moving average to capture the slow-moving ambient noise floor. This part of the algorithm functions inherently as a low-pass filter:
 
 \begin{align}
-    V_{noise}[n] &= \frac{1}{N} \sum_{i=0}^{N-1} V_{adc}[n-i] \label{eq:noise}
+    V_{noise}[n] = \frac{1}{N} \sum_{i=0}^{N-1} V_{adc}[n-i] \label{eq:noise}
 \end{align}
 
-By subtracting this moving average from the raw signal, we effectively perform a derivative-like operation that ignores the steady-state DC bias and detects only the sudden "steps" in voltage caused by the transmitter. The final detection threshold is defined dynamically:
+The SDM achieves its adaptive high-pass characteristics by subtracting this low-frequency baseline from the raw instantaneous sampled voltage. This derivative-like operation ignores the steady-state DC bias and extracts only the sudden, high-frequency voltage "steps" caused by the transmitter:
 
 \begin{align}
-    V_{threshold}[n] &= V_{noise}[n] + \sigma \label{eq:thresh}
+    V_{signal}[n] = V_{adc}[n] - V_{noise}[n] \label{eq:highpass}
 \end{align}
-Where $\sigma$ is a signal margin constant. This ensures the "Detection Zone" floats above the noise floor, maintaining a constant sensitivity regardless of ambient brightness.
+
+The final detection threshold is then defined dynamically above the noise floor:
+
+\begin{align}
+    V_{threshold}[n] = V_{noise}[n] + \sigma \label{eq:thresh}
+\end{align}
+Where $\sigma$ is a static signal margin constant. This ensures the "Detection Zone" floats above the noise floor, maintaining a constant sensitivity regardless of ambient brightness.
+
+\subsection{SDM Initialization and Training Sequence}
+Because the rolling buffer requires a stabilization period to accurately map the ambient noise floor, the system mandates an initialization phase prior to data transmission. During this phase, a known training sequence—the phrase "HELLO WORLD"—is transmitted 10 times. 
+
+Based on the timing ratios defined in Table \ref{tab:morse_timing}, a single transmission of "HELLO WORLD" consumes exactly 111 $T_u$ (inclusive of all intra-character, inter-character, and inter-word gaps). Therefore, the full 10-cycle training sequence spans 1110 $T_u$. Given our baseline $T_u = 200\text{ ms}$, this equates to a deliberate 222-second pre-transmission window. This ensures the SDM buffer ($V_{noise}$) fully saturates with representative environmental data, allowing the dynamic noise margin to settle completely before the receiver attempts to decode unknown payload characters.
 
 \section{Frequency Modulation and Software-Defined Filtering}
 
@@ -283,15 +291,13 @@ By reducing $R_L$, we trade off raw voltage swing for headroom, relying on the h
 \subsection{2~kHz On-Off Keying (OOK) Modulation}
 To resolve solar saturation, we transition to a Software-Defined Optical paradigm. Instead of a static DC pulse, the transmitter modulates the IR LED with a 2~kHz square wave carrier during every Morse "mark" (dit or dah).
 
-This process, acting as a form of subcarrier modulation, involves gating the continuous DC transmission pulse with a high-frequency sequence. By toggling the LED at 2~kHz (a 50% duty cycle), we effectively perform a frequency-domain shift:
+This process, acting as a form of subcarrier modulation, involves gating the continuous DC transmission pulse with a high-frequency sequence. By toggling the LED at 2~kHz (a 50\% duty cycle), we effectively perform a frequency-domain shift:
 \begin{itemize}
     \item \textbf{DC Offset (Sun):} The solar interference resides at 0Hz.
     \item \textbf{Data Signal:} The intentional Morse pulses are now "nested" inside a 2000Hz carrier.
 \end{itemize}
-This separation allows the receiver to ignore the saturated 0Hz baseline and focus entirely on the energy oscillating at the target frequency band. This is implemented in software using the \texttt{tone()} function, which leverages the microcontroller's internal timers to generate a precise square wave.
-Furthermore, operating the LED at a 50% duty cycle reduces the active transmission power consumption by half compared to the continuous DC pulses observed during the Baseband IR, highly benefiting battery-constrained remote sensor nodes.
-
-
+This separation allows the receiver to ignore the saturated 0Hz baseline and focus entirely on the energy oscillating at the target frequency band. This is implemented in software using the \texttt{tone()} function, which leverages the microcontroller's internal timers to generate a precise square wave. \\
+Furthermore, operating the LED at a 50\% duty cycle reduces the active transmission power consumption by half compared to the continuous DC pulses observed during the Baseband IR, highly benefiting battery-constrained remote sensor nodes.
 
 \begin{figure}[htbp]
     \centering
@@ -343,9 +349,9 @@ We evaluated the efficiency of the three methods by transmitting a 44-byte (352-
 \hline
 \textbf{Receiver Mode of } & \textbf{Time (s)} & \textbf{Bitrate (bps)} & \textbf{Environment} \\ 
 \textbf{Communication} & & \\ \hline
-Visible Light           & 101.8             & 3.46                   & Dark/Indoor only     \\ \hline
-Baseband IR  & 81.4              & 4.32                   & Indoor (Non-Solar)   \\ \hline
-Frequency-Modulated IR   & 81.4              & 4.32                   & \textbf{Direct Sunlight} \\ \hline
+Visible Light & 101.8 & 3.46 & Dark/Indoor only \\ \hline
+Baseband IR  & 81.4 & 4.32 & Indoor (Non-Solar) \\ \hline
+Frequency-Modulated IR & 81.4 & 4.32 & \textbf{Direct Sunlight} \\ \hline
 \end{tabular}
 \end{table}
 

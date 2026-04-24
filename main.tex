@@ -221,10 +221,9 @@ Modulated IR & & \\ \hline
 \section{Communication System}
 
 \subsection{Visible Light Baseline}
-
-\subsubsection{Hardware Latency and The "Iceberg Effect"}
+%\subsubsection{Hardware Latency and The "Iceberg Effect"}
 When bridging analog optical sensing and digital microcontrollers, signal truncation occurs. As shown in Fig. \ref{fig:iceberg}, an expected "Dah" signal transmitted for 600ms is detected for a fraction of that time. LDRs exhibit notable rise/fall latency, resulting in a trapezoidal curve. To counteract this, our receiver employs widened tolerance windows as listed in Table \ref{tab:morse_timing-modified}.
-
+The baseline system achieved a maximum reliable transmission distance of only 11-12 cm in room light, and 27 cm in total darkness.
 \begin{figure}[htbp]
     \centering
     \resizebox{\columnwidth}{!}{
@@ -267,8 +266,6 @@ Inter-word gap            & LOW (OFF)            &  $1600\text{ ms}$ \\ \hline
 
 
 
-\subsubsection{Visible Light Results}
-The baseline system achieved a maximum reliable transmission distance of only 11-12 cm in room light, and 27 cm in total darkness.
 
 \subsection{Infrared Evolution and SDM}
 

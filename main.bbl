@@ -7,7 +7,8 @@
 \providecommand{\BIBentrySTDinterwordspacing}{\spaceskip=0pt\relax}
 \providecommand{\BIBentryALTinterwordstretchfactor}{4}
 \providecommand{\BIBentryALTinterwordspacing}{\spaceskip=\fontdimen2\font plus
-\BIBentryALTinterwordstretchfactor\fontdimen3\font minus \fontdimen4\font\relax}
+\BIBentryALTinterwordstretchfactor\fontdimen3\font minus
+  \fontdimen4\font\relax}
 \providecommand{\BIBforeignlanguage}[2]{{%
 \expandafter\ifx\csname l@#1\endcsname\relax
 \typeout{** WARNING: IEEEtran.bst: No hyphenation pattern has been}%
@@ -21,30 +22,49 @@
 \BIBdecl
 
 \bibitem{elgala2011}
-H.~Elgala, R.~Mesleh, and H.~Haas, ``Indoor optical wireless communication: potential and state-of-the-art,'' \emph{IEEE Communications Magazine}, vol.~49, no.~9, pp. 56--62, Sep 2011.
+H.~Elgala, R.~Mesleh, and H.~Haas, ``Indoor optical wireless communication:
+  potential and state-of-the-art,'' \emph{IEEE Communications Magazine},
+  vol.~49, no.~9, pp. 56--62, Sep 2011.
 
 \bibitem{ghassemlooy2012}
-Z.~Ghassemlooy, W.~Popoola, and S.~Rajbhandari, \emph{Optical Wireless Communications: System and Channel Modelling with MATLAB}.\hskip 1em plus 0.5em minus 0.4em\relax Boca Raton, FL, USA: CRC Press, 2012.
+Z.~Ghassemlooy, W.~Popoola, and S.~Rajbhandari, \emph{Optical Wireless
+  Communications: System and Channel Modelling with MATLAB}.\hskip 1em plus
+  0.5em minus 0.4em\relax Boca Raton, FL, USA: CRC Press, 2012.
 
 \bibitem{sewaiwar2015}
-A.~Sewaiwar, S.~V. Tiwari, and Y.~Chung, ``Smart led-based ambient light adaptive vlc system,'' \emph{Optics Express}, vol.~23, no.~19, pp. 24\,456--24\,465, 2015.
+A.~Sewaiwar, S.~V. Tiwari, and Y.~Chung, ``Smart led-based ambient light
+  adaptive vlc system,'' \emph{Optics Express}, vol.~23, no.~19, pp.
+  24\,456--24\,465, 2015.
 
 \bibitem{komine2004}
-T.~Komine and M.~Nakagawa, ``Fundamental analysis for visible-light communication system using led lights,'' \emph{IEEE Transactions on Consumer Electronics}, vol.~50, no.~1, pp. 100--107, Feb 2004.
+T.~Komine and M.~Nakagawa, ``Fundamental analysis for visible-light
+  communication system using led lights,'' \emph{IEEE Transactions on Consumer
+  Electronics}, vol.~50, no.~1, pp. 100--107, Feb 2004.
 
 \bibitem{green2005}
-R.~J. Green, H.~Joshi, M.~D. Higgins, and M.~S. Leeson, ``Adaptive thresholding for optical wireless receivers,'' \emph{IEE Proceedings - Optoelectronics}, vol. 152, no.~6, pp. 317--321, Dec 2005.
+R.~J. Green, H.~Joshi, M.~D. Higgins, and M.~S. Leeson, ``Adaptive thresholding
+  for optical wireless receivers,'' \emph{IEE Proceedings - Optoelectronics},
+  vol. 152, no.~6, pp. 317--321, Dec 2005.
 
 \bibitem{rajagopal2012}
-S.~Rajagopal, R.~D. Roberts, and S.-K. Lim, ``Ieee 802.15.7 visible light communication: modulation schemes and dimming support,'' \emph{IEEE Communications Magazine}, vol.~50, no.~3, pp. 72--82, Mar 2012.
+S.~Rajagopal, R.~D. Roberts, and S.-K. Lim, ``Ieee 802.15.7 visible light
+  communication: modulation schemes and dimming support,'' \emph{IEEE
+  Communications Magazine}, vol.~50, no.~3, pp. 72--82, Mar 2012.
 
 \bibitem{uysal2015}
-M.~Uysal, F.~Miramirkhani, T.~Baykas, and K.~Qaraqe, ``Visible light communication for vehicular networking: Performance study of a v2v system using a low-complexity receiver,'' \emph{IEEE Vehicular Technology Magazine}, vol.~10, no.~4, pp. 71--79, Dec 2015.
+M.~Uysal, F.~Miramirkhani, T.~Baykas, and K.~Qaraqe, ``Visible light
+  communication for vehicular networking: Performance study of a v2v system
+  using a low-complexity receiver,'' \emph{IEEE Vehicular Technology Magazine},
+  vol.~10, no.~4, pp. 71--79, Dec 2015.
 
 \bibitem{smith1997}
-S.~W. Smith, \emph{The Scientist and Engineer's Guide to Digital Signal Processing}.\hskip 1em plus 0.5em minus 0.4em\relax San Diego, CA, USA: California Technical Publishing, 1997.
+S.~W. Smith, \emph{The Scientist and Engineer's Guide to Digital Signal
+  Processing}.\hskip 1em plus 0.5em minus 0.4em\relax San Diego, CA, USA:
+  California Technical Publishing, 1997.
 
 \bibitem{mitra2006}
-S.~K. Mitra, \emph{Digital Signal Processing: A Computer-Based Approach}, 3rd~ed.\hskip 1em plus 0.5em minus 0.4em\relax New York, NY, USA: McGraw-Hill, 2006.
+S.~K. Mitra, \emph{Digital Signal Processing: A Computer-Based Approach},
+  3rd~ed.\hskip 1em plus 0.5em minus 0.4em\relax New York, NY, USA:
+  McGraw-Hill, 2006.
 
 \end{thebibliography}

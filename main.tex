@@ -125,6 +125,7 @@ To ensure reproducibility, the system was tested using standard off-the-shelf co
 \subsection{Baud Rate and Telemetry Applicability}
 Morse code, utilizing OOK, possesses a fundamentally low baud rate compared to modern digital modulation schemes like UART or QAM. However, for specialized telemetry applications—such as underwater optical communication or low-cost sensor nodes—signal penetration and robustness take precedence over raw speed. The widened tolerance windows used in this paper's decoding logic demonstrate how low baud rate systems can reliably reconstruct highly degraded signals \cite{uysal2015}.
 
+\section{System Model}
 \subsection{Baseband Morse Encoding}
 To establish a quantitative baseline for On-Off Keying (OOK) modulation, the system utilizes the standard international Morse code protocol. In this telemetry model, the transmitter's digital output pin toggles between a HIGH (active) and LOW (idle) state to construct characters. 
 
@@ -184,6 +185,15 @@ This baseband square wave serves as the fundamental logic envelope for all subse
     \label{fig:morse_an}
 \end{figure}
 
+\subsection{Hardware Setup}
+    Fig. \ref{fig:ckt}
+    shows the transceiver configuration used for various cases.  
+\begin{itemize}
+    \item Transmitter (TX): An Arduino microcontroller drives a standard visible/IR LED. The LED's anode connects to Digital Pin 5, while the cathode is grounded through a $220\Omega$ current-limiting resistor. 
+    \item Receiver (RX): The optical sensor is a Light Dependent Resistor (LDR)/IR receiver (connected in reverse bias) arranged in a voltage divider. The 5V supply is connected to one leg of the receiver. The secondary leg connects to the Arduino's Analog Pin A0 and a pull-down resistor ($R$) connected to ground. 
+\end{itemize}
+    The corresponding details are available in 
+Table \ref{tab:res_vs_dist}.
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.6\columnwidth]{figs/circuit.jpeg}
@@ -191,15 +201,26 @@ This baseband square wave serves as the fundamental logic envelope for all subse
     \label{fig:ckt}
 \end{figure}
 
+\begin{table}[htbp]
+\caption{Maximum Reliable Distance vs. Load Resistance}
+\label{tab:res_vs_dist}
+\centering
+\begin{tabular}{|l|c|l|}
+\hline
+\textbf{Configuration} & \textbf{Load Resistor ($R_L$)} & \textbf{Maximum Range} \\ \hline
+Visible Light & 10 k$\Omega$ & 27 cm \\ 
+(LDR) & & \\ \hline
+Baseband IR & 10 k$\Omega$ & $\approx$ 50 cm (47 cm) \\ \hline
+Baseband IR & 1 M$\Omega$ & $\approx$ 2 m (157 cm) \\ \hline
+Frequency- & 1 M$\Omega$ & $>$ 2 m (Slightly better) \\ 
+Modulated IR & & \\ \hline
+\end{tabular}
+\end{table}
+
 \section{Visible Light Baseline}
 
 \subsection{Circuit Implementation}
 The baseline system operates entirely in the visible spectrum. 
-\begin{itemize}
-    \item Transmitter (TX): An Arduino microcontroller drives a standard visible LED. The LED's anode connects to Digital Pin 5, while the cathode is grounded through a $220\Omega$ current-limiting resistor. 
-    \item Receiver (RX): The optical sensor is a Light Dependent Resistor (LDR) arranged in a voltage divider. The 5V supply is connected to one leg of the LDR. The secondary leg connects to the Arduino's Analog Pin A0 and a $10\text{k}\Omega$ pull-down resistor connected to ground. 
-\end{itemize}
-
 \subsection{Hardware Latency and The "Iceberg Effect"}
 When bridging analog optical sensing and digital microcontrollers, signal truncation occurs. As shown in Fig. \ref{fig:iceberg}, an expected "Dah" signal transmitted for 600ms is detected for a fraction of that time. LDRs exhibit notable rise/fall latency, resulting in a trapezoidal curve. To counteract this, our receiver employs widened tolerance windows as listed in Table \ref{tab:morse_timing-modified}.
 
@@ -259,22 +280,6 @@ To resolve the noise and range issues of the baseline VLC system, the physical l
 
 \subsection{Hardware Impedance and Range Comparison}
 To highlight the impact of hardware impedance on signal recovery, Table \ref{tab:res_vs_dist} compares the maximum reliable transmission distances across the initial configurations. The visible light baseline (LDR) failed abruptly at 27 cm using a $10\text{k}\Omega$ pull-down resistor. Transitioning to an unoptimized IR setup with the same $10\text{k}\Omega$ load yielded only a marginal improvement to approximately 50 cm (47 cm). However, by upgrading the load resistor to $1\text{M}\Omega$, the optimized IR-SDM setup successfully extended the range to nearly 2 meters (157 cm) indoors. Frequency-Modulated IR (discussed in Section IV) maintained this performance with slightly better robustness.
-
-\begin{table}[htbp]
-\caption{Maximum Reliable Distance vs. Load Resistance}
-\label{tab:res_vs_dist}
-\centering
-\begin{tabular}{|l|c|l|}
-\hline
-\textbf{Configuration} & \textbf{Load Resistor ($R_L$)} & \textbf{Maximum Range} \\ \hline
-Visible Light & 10 k$\Omega$ & 27 cm \\ 
-(LDR) & & \\ \hline
-Baseband IR & 10 k$\Omega$ & $\approx$ 50 cm (47 cm) \\ \hline
-Baseband IR & 1 M$\Omega$ & $\approx$ 2 m (157 cm) \\ \hline
-Frequency- & 1 M$\Omega$ & $>$ 2 m (Slightly better) \\ 
-Modulated IR & & \\ \hline
-\end{tabular}
-\end{table}
 
 \subsection{Hardware Optimization and SDM}
 Operating in reverse-bias, the photodiode produces a photocurrent ($I_{pd}$) proportional to the incident photon flux; consequently, the voltage sampled by the ADC is governed by $V_{adc} = I_{pd} \times R_L$. By increasing $R_L$ from $10\text{k}\Omega$ to $1\text{M}\Omega$, sensitivity was maximized, extending the raw range to 1.57 meters indoors.

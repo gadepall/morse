@@ -284,7 +284,7 @@ This moving average inherently acts as a digital low-pass filter. To extract the
     \tau[n] = \mu[n] + \sigma \label{eq:thresh}
 \end{equation}
 
-By dynamically adjusting the threshold relative to the moving baseline, the detection zone floats alongside ambient light shifts. The logic implementation is detailed in Algorithm \ref{alg:dynamic_thresh}, and the discrete sampling behavior is visualized in Fig. \ref{fig:dynamic_graph}.
+By dynamically adjusting the threshold relative to the moving baseline, the detection zone floats alongside ambient light shifts. The logic implementation is detailed in Algorithm \ref{alg:dynamic_threshold}, and the discrete sampling behavior is visualized in Fig. \ref{fig:dynamic_graph}.
 
 \begin{algorithm}[htbp]
 \caption{Dynamic Thresholding for OOK Demodulation}
@@ -361,7 +361,7 @@ By dynamically adjusting the threshold relative to the moving baseline, the dete
     \end{tikzpicture}
     }
     \caption{Exact mathematical mapping of the "HELLO WORLD" sequence. With a base time unit $T_u = 200$ ms and sample interval $T_s = 20$ ms, each standard Dit and Gap captures precisely 10 discrete samples. Because the buffer size is massive ($N=500$), the local mean $\mu[n]$ remains highly stable and does not climb high enough to clip the signal during pulses, completely preventing baseline wander.}
-    \label{fig:dynamic_graph_exact}
+    \label{fig:dynamic_graph}
 \end{figure}
 
 % \subsubsection{Initialization and Training Sequence}

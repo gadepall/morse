@@ -265,8 +265,7 @@ Inter-character gap       & LOW (OFF)            &  $750\text{ ms}$ \\ \hline
 Inter-word gap            & LOW (OFF)            &  $1600\text{ ms}$ \\ \hline
 \end{tabular}
 \end{table}
-
-\newpage
+Instructions for flashing the firmware on the Arduinos for setting up the communication system are available in Appendix \ref{app:hardware}.
 
 \subsection{Infrared Evolution and Dynamic Thresholding}
 
@@ -619,14 +618,15 @@ The integration of impedance-tuned hardware with software-defined filtering yiel
 % This paper presented an evolutionary approach to overcoming the physical layer limitations of low-cost optical wireless communication. By systematically advancing from a basic visible light LDR circuit to an Infrared Dynamic Thresholding method, we mitigated indoor thermal noise and extended the range up to 2m. The implementation of a software-defined Goertzel filter on the 8-bit ATmega328P architecture proved to be the most robust solution. By shifting from hardware-reliant IR sensing to digital signal processing, the system successfully bypassed the 0Hz DC saturation caused by direct sunlight. This "Virtual Filter" approach allows low-cost microcontrollers to achieve high-selectivity communication that traditionally requires expensive specialized hardware. Future work will focus on optimizing the Goertzel block size ($N$) to further increase the bitrate while maintaining the noise-rejection benefits of the software-defined optical link.
 
 \section{Conclusion and Future Work}
-This paper demonstrated a systematic progression in overcoming the physical layer limitations of low-cost optical wireless communication. By evolving from basic visible light sensing to an adaptive Infrared system, we mitigated photo-conductive latency and indoor thermal noise. By shifting the complexity from hardware to a software-defined paradigm—utilizing 2~kHz OOK modulation and an optimized Goertzel digital filter—the system successfully maintained 100\% decoding accuracy at ranges up to 2m, even under direct solar interference. This "virtual filter" approach highlights the potential for low-power microcontrollers to perform sophisticated signal recovery in high-noise environments without requiring specialized commercial hardware. Future work will explore real-time transmission and increasing the baud rate, communication range as well as the security.
+This paper demonstrated a systematic progression in overcoming the physical layer limitations of low-cost optical wireless communication. By evolving from basic visible light sensing to an adaptive Infrared system, we mitigated photo-conductive latency and indoor thermal noise. By shifting the complexity from hardware to a software-defined paradigm—utilizing 2~kHz OOK modulation and an optimized Goertzel digital filter—the system successfully maintained 100\% decoding accuracy at ranges up to 2m, even under direct solar interference. This "virtual filter" approach highlights the potential for low-power microcontrollers to perform sophisticated signal recovery in high-noise environments without requiring specialized commercial hardware. Future work will explore real-time transmission and increasing the baud rate, communication range as well as security.  Further, we plan to integrate the communication modules with a mobile phone for realtime text transfer. 
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}
 
 \appendices
 
-\section*{Appendix}
+\section{}
+\label{app:hardware}
 
 \begin{enumerate}
 \item The code can be uploaded to the Arduino UNO using \texttt{PlatformIO}. Setup two project directories - one for transmitter and one for receiver.

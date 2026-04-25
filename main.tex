@@ -8,6 +8,8 @@
 \usepackage{listings}
 \usepackage{hyperref}
 \usepackage{tikz}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.17}
 \usetikzlibrary{shapes,arrows,positioning,calc}
@@ -55,19 +57,19 @@ we introduce
 Infrared (IR) 
 communication to extend the range and explore more advanced techniques to improve the system performance. 
 This is done by using the Arduino as the transceiver platform.  Our communication scheme is successfully demonstrated for a range of up to 2 meters.
-%spectrum coupled with a Stepwise Derivative Method (SDM) for adaptive thresholding, extending the range to 1.57 meters indoors. Finally, Phase III addresses the critical limitation of direct solar interference by implementing a fully software-defined 2~kHz carrier wave and a digital Goertzel filter, successfully rejecting DC solar saturation without requiring complex commercial hardware filters.
+%spectrum coupled with Dynamic Thresholding algorithm for adaptive thresholding, extending the range to 1.57 meters indoors. Finally, Phase III addresses the critical limitation of direct solar interference by implementing a fully software-defined 2~kHz carrier wave and a digital Goertzel filter, successfully rejecting DC solar saturation without requiring complex commercial hardware filters.
 \end{abstract}
 
 \begin{IEEEkeywords}
-Visible Light Communication (VLC), Infrared (IR), Stepwise Derivative Method (SDM), Goertzel Algorithm, On-Off Keying (OOK), Adaptive Thresholding.
+Visible Light Communication (VLC), Infrared (IR), Deynamic Thresholding, Goertzel Algorithm, On-Off Keying (OOK), Adaptive Thresholding.
 \end{IEEEkeywords}
 
 \section{Introduction}
 Wireless optical communication is highly dependent on clear Line-of-Sight (LoS) and a high Signal-to-Noise Ratio (SNR) \cite{elgala2011, ghassemlooy2012}. In low-cost embedded systems, a standard Light Emitting Diode (LED) paired with a Light Dependent Resistor (LDR) is commonly used to demonstrate data transfer. However, ambient environmental lighting introduces a severe DC bias into the receiver, and LDRs exhibit significant photo-conductive latency \cite{sewaiwar2015}. 
-The novelty of this paper lies in its evolutionary approach to solving physical layer limitations, building upon foundational On-Off Keying (OOK) optical paradigms \cite{komine2004}. We first establish a baseline VLC system to document hardware-induced signal degradation, known as the "Iceberg Effect." Following this, we introduce an advanced Infrared (IR) iteration utilizing the Stepwise Derivative Method (SDM)—a software-defined algorithm that tracks the environmental noise floor \cite{green2005}. Finally, to overcome severe outdoor solar interference \cite{rajagopal2012}, we introduce a Goertzel algorithm-based digital signal processing (DSP) approach, effectively turning a low-cost microcontroller into a software-defined radio for optical frequencies.
+The novelty of this paper lies in its evolutionary approach to solving physical layer limitations, building upon foundational On-Off Keying (OOK) optical paradigms \cite{komine2004}. We first establish a baseline VLC system to document hardware-induced signal degradation, known as the "Iceberg Effect." Following this, we introduce an advanced Infrared (IR) iteration utilizing Dynamic Thresholding—a software-defined algorithm that tracks the environmental noise floor \cite{green2005}. Finally, to overcome severe outdoor solar interference \cite{rajagopal2012}, we introduce a Goertzel algorithm-based digital signal processing (DSP) approach, effectively turning a low-cost microcontroller into a software-defined radio for optical frequencies.
 
 \subsection{Related Works and Novelty}
-Standard commercial IR systems avoid ambient noise by utilizing 38kHz Carrier Waves and specialized TSOP receiver modules. While effective, these modules act as "black boxes" that strip the analog signal data away from the microcontroller, preventing custom low-level signal analysis. Conversely, standard unmodulated photodiode circuits use fixed analog thresholds that fail the moment room lighting changes. Our proposed SDM and Goertzel implementations bridge this gap, retaining raw analog sampling while applying dynamic digital filters to reject ambient DC bias. The related block diagram is available in 
+Standard commercial IR systems avoid ambient noise by utilizing 38kHz Carrier Waves and specialized TSOP receiver modules. While effective, these modules act as "black boxes" that strip the analog signal data away from the microcontroller, preventing custom low-level signal analysis. Conversely, standard unmodulated photodiode circuits use fixed analog thresholds that fail the moment room lighting changes. Our proposed Dynamic Thresholding and Goertzel implementations bridge this gap, retaining raw analog sampling while applying dynamic digital filters to reject ambient DC bias. The related block diagram is available in 
     Fig. \ref{fig:block}
 \begin{figure}[htbp]
     \centering
@@ -87,7 +89,7 @@ Standard commercial IR systems avoid ambient noise by utilizing 38kHz Carrier Wa
         % RX Nodes
         \node [block, below=1.5cm of led] (sensor) {LDR/PD\\(Voltage Divider)};
         \node [block, left=of sensor] (adc) {ADC\\(Sampling)};
-        \node [block, below=of adc] (sdm) {SDM/Goertzel\\(Digital Filter)};
+        \node [block, below=of adc] (sdm) {Dynamic Threshold/Goertzel\\(Digital Filter)};
         \node [block, right=of sdm] (decoder) {Symbol\\Decoder};
         \node [block, right=of decoder] (disp) {7-Segment\\Display};
 
@@ -263,30 +265,126 @@ Inter-word gap            & LOW (OFF)            &  $1600\text{ ms}$ \\ \hline
 \end{tabular}
 \end{table}
 
+\subsection{Infrared Evolution and Dynamic Thresholding}
 
+\subsubsection{Hardware Optimization and Adaptive Filtering}
+Operating in reverse-bias, the photodiode produces a photocurrent ($I_{pd}$) proportional to the incident photon flux; consequently, the voltage sampled by the ADC is governed by $V_{adc} = I_{pd} \times R$. By increasing $R$ from $10\text{ k}\Omega$ to $1\text{ M}\Omega$, sensitivity was maximized, extending the raw range to 1.57 meters indoors.
 
+To isolate transmission pulses from fluctuating indoor IR noise, we implement a discrete-time Dynamic Thresholding algorithm. The core challenge is that the photodiode's ambient baseline is not zero; it is a floating DC offset that shifts as environmental lighting changes. To track this, the receiver converts the continuous-time analog voltage $x(t)$ into a discrete-time sequence by polling the Analog-to-Digital Converter (ADC) at designated intervals. Let $T_s$ represent this sampling period. The discrete sample index $n$ maps directly to physical continuous time via the relation $t = n T_s$, defining our sampled sequence as $x[n] = x(n T_s)$. 
 
+In our firmware implementation, non-blocking timer polling via the \texttt{millis()} function is utilized to target a sampling interval of $T_s \approx 20$ ms. It is important to note that this is a practical approximation; because hardware interrupts were bypassed in favor of a software-defined timer loop, minor microsecond-level timing jitters exist due to the variable instruction cycle overhead of the \texttt{analogRead()} function and sequential conditional logic.
 
-\subsection{Infrared Evolution and SDM}
+The algorithm calculates a rolling local mean, $\mu[n]$, over a circular buffer of $N$ samples to capture the slow-moving ambient noise floor:
+\begin{equation}
+    \mu[n] = \frac{1}{N} \sum_{i=0}^{N-1} x[n-i] \label{eq:noise}
+\end{equation}
 
-\subsubsection{Hardware Optimization and SDM}
-Operating in reverse-bias, the photodiode produces a photocurrent ($I_{pd}$) proportional to the incident photon flux; consequently, the voltage sampled by the ADC is governed by $V_{adc} = I_{pd} \times R$. By increasing $R$ from $10\text{k}\Omega$ to $1\text{M}\Omega$, sensitivity was maximized, extending the raw range to 1.57 meters indoors.
+This moving average inherently acts as a digital low-pass filter. To extract the high-frequency OOK pulses, a dynamic threshold $\tau[n]$ is established by adding a constant margin $\sigma$ to the local mean:
 
-To isolate transmission pulses from fluctuating indoor IR noise, we developed the Stepwise Derivative Method (SDM). The core challenge is that the "dark" voltage of a photodiode is not zero; it is a floating DC offset that changes as room lights are toggled. To address this, the algorithm first calculates a moving average to capture the slow-moving ambient noise floor. This part of the algorithm functions inherently as a low-pass filter:
+\begin{equation}
+    \tau[n] = \mu[n] + \sigma \label{eq:thresh}
+\end{equation}
 
-\begin{align}
-    V_{noise} = \frac{1}{N} \sum_{i=0}^{N-1} V_{adc}[i] \label{eq:noise}
-\end{align}
+By dynamically adjusting the threshold relative to the moving baseline, the detection zone floats alongside ambient light shifts. The logic implementation is detailed in Algorithm \ref{alg:dynamic_thresh}, and the discrete sampling behavior is visualized in Fig. \ref{fig:dynamic_graph}.
 
-The SDM achieves its adaptive high-pass characteristics by subtracting this low-frequency baseline from the raw instantaneous sampled voltage. This derivative-like operation ignores the steady-state DC bias and extracts only the sudden, high-frequency voltage "steps" caused by the transmitter. The final detection threshold is then defined dynamically above the noise floor:
+\begin{algorithm}[htbp]
+\caption{Dynamic Thresholding for OOK Demodulation}
+\label{alg:dynamic_thresh}
+\begin{algorithmic}[1]
+\REQUIRE Discrete input sequence $x[n]$, Window size $N$, Margin $\sigma$
+\STATE Initialize circular buffer $B$ of size $N$ to 0
+\STATE Initialize running sum $S \leftarrow 0$
+\FOR{each strictly timed sampling interval $n$}
+    \STATE $S \leftarrow S - B[n \bmod N]$ \COMMENT{Remove oldest sample}
+    \STATE $B[n \bmod N] \leftarrow x[n]$ \COMMENT{Insert new sample}
+    \STATE $S \leftarrow S + x[n]$
+    \STATE $\mu[n] \leftarrow S / N$ \COMMENT{Calculate local mean}
+    \STATE $\tau[n] \leftarrow \mu[n] + \sigma$ \COMMENT{Set floating threshold}
+    \IF{$x[n] > \tau[n]$}
+        \STATE Register logical HIGH (Pulse active)
+    \ELSE
+        \STATE Register logical LOW (Idle)
+    \ENDIF
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
 
-\begin{align}
-    V_{threshold} = V_{noise} + \sigma \label{eq:thresh}
-\end{align}
-Where $\sigma$ is a static signal margin constant. This ensures the "Detection Zone" floats above the noise floor, maintaining a constant sensitivity regardless of ambient brightness.
+\begin{figure}[htbp]
+    \centering
+    \resizebox{\columnwidth}{!}{
+    \begin{tikzpicture}[scale=1]
+        % Axes
+        \draw[->, thick] (-1,0) -- (68,0) node[right] {Sample ($n$)};
+        \draw[->, thick] (0,-0.5) -- (0,6.8) node[above] {Amplitude};
 
-\subsubsection{SDM Initialization and Training Sequence}
-Because the rolling buffer requires a stabilization period to accurately map the ambient noise floor, the system mandates an initialization phase prior to data transmission. Initially, the system starts with an assumed, pre-defined threshold for the signal margin ($\sigma$), detailed in Table \ref{tab:assumed_thresholds}, to bootstrap the detection logic based on the expected ambient environment.During this initialization phase, a known training sequence—the phrase "HELLO WORLD"—is transmitted 10 times. 
+        % Axis Ticks
+        \foreach \x in {0, 10, 20, 30, 40, 50, 60} {
+            \draw[thick] (\x, 0.1) -- (\x, -0.1) node[below, scale=0.8] {\x};
+        }
+        \node[below, scale=0.9] at (30, -0.7) {Discrete Sample Index ($n$) mapping to $t = n T_s$ ($T_s = 20$ ms)};
+
+        % Local Mean - Rises VERY slowly because the buffer is massive (N=500)
+        \draw[blue, thick] (0,0.5) .. controls (30,0.6) .. (65,0.8) node[right, align=center, scale=0.8] {Local Mean\\$\mu[n]$ (N=500)};
+
+        % Dynamic Threshold
+        \draw[red, thick, dashed] (0,2.0) .. controls (30,2.1) .. (65,2.3) node[right, align=center, scale=0.8] {Threshold\\$\tau[n]$};
+
+        % Continuous underlying signal x(t) simulating exactly 'H' (....)
+        \draw[orange!70, thick, rounded corners=1.5pt]
+            (0, 0.5) -- (9.5, 0.6) % Initialization noise
+            -- (9.8, 5.0) -- (19.2, 5.0) % Dit 1
+            -- (19.5, 0.6) -- (29.5, 0.7) % Gap 1
+            -- (29.8, 5.1) -- (39.2, 5.1) % Dit 2
+            -- (39.5, 0.7) -- (49.5, 0.8) % Gap 2
+            -- (49.8, 5.0) -- (59.2, 5.0) % Dit 3
+            -- (59.5, 0.8) -- (65, 0.9);  % Gap 3
+
+        \node[orange!90!black, above, scale=0.8] at (14, 3.5) {Continuous $x(t)$};
+
+        % Discrete Signal Stems & Points x[n]
+        % Exact 10-sample resolution per Tu (200ms Tu / 20ms Ts = 10 samples)
+        \foreach \x in {0,1,...,9}   { \draw[gray, thin] (\x,0) -- (\x,0.55); \filldraw[black] (\x,0.55) circle (1.2pt); }
+        \foreach \x in {10,11,...,19} { \draw[gray, thin] (\x,0) -- (\x,5.0); \filldraw[black] (\x,5.0) circle (1.2pt); }
+        \foreach \x in {20,21,...,29} { \draw[gray, thin] (\x,0) -- (\x,0.65); \filldraw[black] (\x,0.65) circle (1.2pt); }
+        \foreach \x in {30,31,...,39} { \draw[gray, thin] (\x,0) -- (\x,5.1); \filldraw[black] (\x,5.1) circle (1.2pt); }
+        \foreach \x in {40,41,...,49} { \draw[gray, thin] (\x,0) -- (\x,0.75); \filldraw[black] (\x,0.75) circle (1.2pt); }
+        \foreach \x in {50,51,...,59} { \draw[gray, thin] (\x,0) -- (\x,5.0); \filldraw[black] (\x,5.0) circle (1.2pt); }
+        \foreach \x in {60,61,...,65} { \draw[gray, thin] (\x,0) -- (\x,0.85); \filldraw[black] (\x,0.85) circle (1.2pt); }
+
+        % Timings annotations matching Arduino Code variables
+        \draw[<->, thick, black!70] (10, 5.4) -- (19, 5.4) node[midway, above, scale=0.8] {Dit (1 $T_u$ = 10 samples)};
+        \draw[<->, thick, black!70] (20, 1.2) -- (29, 1.2) node[midway, above, scale=0.8] {Intra-char Gap};
+        \draw[<->, thick, black!70] (30, 5.5) -- (39, 5.5) node[midway, above, scale=0.8] {Dit (10 samples)};
+        
+        % Main character annotation
+        \draw[<->, thick, blue!70!black] (10, 6.2) -- (59, 6.2) node[midway, above, scale=0.9] {\textbf{Start of 'H' (....) from "HELLO WORLD"}};
+
+    \end{tikzpicture}
+    }
+    \caption{Exact mathematical mapping of the "HELLO WORLD" sequence. With a base time unit $T_u = 200$ ms and sample interval $T_s = 20$ ms, each standard Dit and Gap captures precisely 10 discrete samples. Because the buffer size is massive ($N=500$), the local mean $\mu[n]$ remains highly stable and does not climb high enough to clip the signal during pulses, completely preventing baseline wander.}
+    \label{fig:dynamic_graph_exact}
+\end{figure}
+
+% \subsubsection{Initialization and Training Sequence}
+% Because the rolling buffer requires a stabilization period to accurately map the ambient noise floor, the system mandates an initialization phase prior to data transmission. The system starts with an assumed signal margin ($\sigma$), detailed in Table \ref{tab:assumed_thresholds}, to bootstrap the detection logic. During this phase, a known training sequence ("HELLO WORLD") is transmitted 10 times. 
+
+% \begin{table}[htbp]
+% \caption{Initial Assumed Threshold Margins ($\sigma$) Prior to Stabilization}
+% \label{tab:assumed_thresholds}
+% \centering
+% \begin{tabular}{|l|c|l|}
+% \hline
+% \textbf{Ambient Environment} & \textbf{Assumed Margin ($\sigma$)} & \textbf{ADC Voltage Equivalent} \\ \hline
+% Total Darkness & 30 & $\approx 0.15\text{V}$ \\ \hline
+% Standard Indoor Lighting & 80 & $\approx 0.39\text{V}$ \\ \hline
+% High Ambient (Near Window) & 150 & $\approx 0.73\text{V}$ \\ \hline
+% \end{tabular}
+% \end{table}
+
+% Based on the timing ratios defined in Table \ref{tab:morse_timing}, this full 10-cycle training sequence spans 1110 $T_u$, equating to a deliberate 222-second pre-transmission window. This ensures the filter buffer fully saturates with representative environmental data before processing unknown payloads.
+
+\subsubsection{Dynamic Thresholding Initialization and Training Sequence}
+Because the rolling buffer requires a stabilization period to accurately map the ambient noise floor, the system mandates an initialization phase prior to data transmission. Initially, the system starts with an assumed, pre-defined threshold for the signal margin ($\sigma$), detailed in Table \ref{tab:assumed_thresholds}, to bootstrap the detection logic based on the expected ambient environment. During this initialization phase, a known training sequence—the phrase "HELLO WORLD"—is transmitted 10 times. 
 
 \begin{table}[htbp]
 \caption{Initial Assumed Signal Margins ($\sigma$) Prior to Stabilization (1 M$\Omega$ Setup)}
@@ -304,7 +402,7 @@ High Ambient & 150 & $\approx 0.73\text{V}$ \\
 \end{tabular}
 \end{table}
 
-Based on the timing ratios defined in Table \ref{tab:morse_timing}, a single transmission of "HELLO WORLD" consumes exactly 111 $T_u$ (inclusive of all intra-character, inter-character, and inter-word gaps). Therefore, the full 10-cycle training sequence spans 1110 $T_u$. Given our baseline $T_u = 200\text{ ms}$, this equates to a deliberate 222-second pre-transmission window. This ensures the SDM buffer ($V_{noise}$) fully saturates with representative environmental data, allowing the dynamic baseline to settle completely alongside the assumed margin before the receiver attempts to decode unknown payload characters.
+Based on the timing ratios defined in Table \ref{tab:morse_timing}, a single transmission of "HELLO WORLD" consumes exactly 111 $T_u$ (inclusive of all intra-character, inter-character, and inter-word gaps). Therefore, the full 10-cycle training sequence spans 1110 $T_u$. Given our baseline $T_u = 200\text{ ms}$, this equates to a deliberate 222-second pre-transmission window. This ensures the Dynamic Thresholding buffer ($V_{noise}$) fully saturates with representative environmental data, allowing the dynamic baseline to settle completely alongside the assumed margin before the receiver attempts to decode unknown payload characters.
 
 \subsection{Frequency Modulation and Software-Defined Filtering}
 
@@ -351,17 +449,59 @@ Furthermore, operating the LED at a 50\% duty cycle reduces the active transmiss
 \end{figure}
 
 \subsubsection{Sampling and Goertzel Digital Signal Processing}
-To detect the 2~kHz carrier without external hardware filters, the receiver's ADC must satisfy the Nyquist theorem (requiring a minimum sampling rate of 4kHz). We modify the \texttt{ADCSRA} register to change the prescaler from 128 to 16, accelerating the sampling rate from $\approx 10\text{kHz}$ to $\approx 60\text{kHz}$, which provides massive oversampling for high-resolution frequency detection.
+To detect the 2~kHz carrier without external hardware filters, the receiver's ADC must satisfy the Nyquist theorem (requiring a minimum sampling rate of 4~kHz). We modify the \texttt{ADCSRA} register to change the prescaler from 128 to 16, accelerating the sampling rate from $\approx 10\text{ kHz}$ to $\approx 60\text{ kHz}$, which provides massive oversampling for high-resolution frequency detection.
 
-We then implement the Goertzel algorithm \cite{smith1997} to act as a digital bandpass filter. Unlike a full Fast Fourier Transform (FFT), the Goertzel algorithm is computationally optimized to calculate the magnitude of a single target frequency ($f_{target} = 2000\text{Hz}$), making it ideal for the limited memory of microcontrollers \cite{mitra2006}. 
+We then implement the Goertzel algorithm \cite{smith1997} to act as a digital bandpass filter. Unlike a full Fast Fourier Transform (FFT) that computes all frequency bins, the Goertzel algorithm is computationally optimized to evaluate the spectral energy of a single target frequency ($f_{target} = 2000\text{ Hz}$). Mathematically, it operates similarly to a second-order Infinite Impulse Response (IIR) filter. It effectively convolves the input signal with a complex sinusoid at the target frequency; target frequencies constructively interfere and accumulate, while off-target frequencies (like 0~Hz DC sunlight or 120~Hz AC flicker) destructively cancel out over the integration period. 
 
-During the real-time loop, the system updates a second-order Infinite Impulse Response (IIR) filter state:
+The procedure is detailed in Algorithm \ref{alg:goertzel}. The variable $M^2$ represents the squared spectral magnitude (or power) of the signal at the target frequency. We intentionally evaluate the squared magnitude $M^2$ rather than the absolute magnitude $M$ to avoid the high computational cost of floating-point square root operations on an 8-bit microcontroller.
+
+\begin{algorithm}[htbp]
+\caption{Real-Time Goertzel Single-Bin DFT}
+\label{alg:goertzel}
+\begin{algorithmic}[1]
+\Require $N$ (Block size, e.g., 80)
+\Require $k$ (Target frequency index)
+\Require $x[n]$ (Incoming ADC samples)
+\State \textbf{Initialization:}
+\State $\omega \gets \frac{2 \pi k}{N}$
+\State $\text{coeff} \gets 2 \cos(\omega)$
+\State $q_1 \gets 0$
+\State $q_2 \gets 0$
+\Statex
+\State \textbf{Processing Loop (Per Block):}
+\For{$n = 0$ to $N - 1$}
+    \State $q_0 \gets \text{coeff} \cdot q_1 - q_2 + x[n]$
+    \State $q_2 \gets q_1$
+    \State $q_1 \gets q_0$
+\EndFor
+\Statex
+\State \textbf{Magnitude Evaluation:}
+\State $M^2 \gets q_1^2 + q_2^2 - (\text{coeff} \cdot q_1 \cdot q_2)$
+\State \Return $M^2$
+\end{algorithmic}
+\end{algorithm}
+
+After $N=80$ samples (which takes approximately $1.33\text{ ms}$ to process at 60~kHz), the squared magnitude $M^2$ is evaluated against a static threshold. Because DC sunlight and indoor flicker do not resonate with the pre-computed coefficient, their resultant magnitude approaches zero. This effectively neutralizes the moving noise floor that typically requires adaptive dynamic thresholding in IR communications, allowing this Frequency-Modulated system to reliably "see" the 2~kHz pulses even through a saturated DC bias.
+
+\subsubsection{Static Thresholding and OOK Demodulation}
+In an ideal, noiseless environment, the Goertzel algorithm would compute a squared magnitude of exactly $M^2 = 0$ when the 2~kHz transmitter is off. In practice, however, the receiver's baseline is subject to thermal noise, ADC quantization errors, and residual harmonics from ambient electromagnetic interference. Consequently, the quiescent state continuously yields random, low-level spectral noise.
+
+To translate the continuous Goertzel output into a discrete binary sequence, an empirical static threshold ($\tau_{mag}$) must be established to differentiate between ambient noise and a legitimate 2~kHz pulse. In this implementation, the threshold is defined as:
 \begin{equation}
-    s[n] = x[n] + \left(2 \cos\left(\frac{2\pi k}{N}\right) \cdot s[n-1]\right) - s[n-2]
+    \tau_{mag} = 15000
 \end{equation}
-After $N=80$ samples (which takes approximately $1.33\text{ ms}$ to process at 60~kHz), the squared magnitude $M^2$ is evaluated. Because DC sunlight (0Hz) and 120Hz indoor flicker do not resonate with the pre-computed coefficient, their resultant magnitude approaches zero. This effectively neutralizes the moving noise floor that required adaptive SDM in IR, allowing Frequency-Modulated IR to utilize a highly reliable static magnitude threshold to "see" the 2~kHz flashes even through a saturated DC bias.
 
-The efficacy of this software-defined approach is evidenced by the raw sampled data. In direct sunlight, the ambient DC floor may occupy $\approx 90\%$ of the ADC range (e.g., a baseline of $\approx 950$), while the 2~kHz carrier oscillates with a peak-to-peak amplitude of only $\pm 15$ units. Traditional thresholding (SDM) fails in this context because environmental noise fluctuations often exceed the signal amplitude. However, because the Goertzel algorithm concentrates the signal energy into a single frequency bin, it produces a high-magnitude resonance that is easily distinguishable from the DC solar offset and 120Hz artificial lighting flicker, allowing for a reliable static magnitude threshold.
+Because the algorithm accumulates 80 samples of 10-bit ADC values, constructive interference during a valid 2~kHz pulse produces massive squared magnitudes, typically on the order of $10^5$ to $10^6$. The threshold $\tau_{mag} = 15000$ is positioned sufficiently high to safely clear the baseline noise floor (which hovers significantly lower), yet low enough to detect attenuated signals from distant transmitters.
+
+During the processing loop, the system acts as a digital slicer for On-Off Keying (OOK) demodulation by evaluating the boolean condition:
+\begin{equation}
+    \text{Pulse Detected} = \begin{cases} 
+      \text{True (HIGH)}, & \text{if } M^2 > \tau_{mag} \\
+      \text{False (LOW)}, & \text{otherwise} 
+   \end{cases}
+\end{equation}
+
+Crucially, this approach eliminates the need for the adaptive moving-average buffer required in raw unmodulated IR detection. Because the Goertzel filter mathematically isolates the target frequency and inherently suppresses the 0~Hz DC offset from sunlight, the baseline no longer wanders. This stability allows the system to rely on a highly efficient, hardcoded static threshold without risking false positives from environmental lighting shifts.
 
 \section{Experimental Results}
 
@@ -378,14 +518,15 @@ We evaluated the efficiency of the three methods by transmitting a 44-byte (352-
 \textbf{Communication} & & \\ \hline
 Visible Light & 101.8 & 3.46 & Dark/Indoor only \\ \hline
 Baseband IR  & 81.4 & 4.32 & Indoor (Non-Solar) \\ \hline
-Frequency-Modulated IR & 81.4 & 4.32 & \textbf{Direct Sunlight} \\ \hline
+Frequency- & 81.4 & 4.32 & \textbf{Direct Sunlight} \\ 
+Modulated IR  & & \\ \hline
 \end{tabular}
 \end{table}
 
 As shown in Table \ref{tab:bps}, Frequency-Modulated IR maintains the peak bitrate of 4.32 bps even in high-solar environments where VLC and Baseband IR systems experience complete signal saturation and $<10$\% decoding accuracy.
 
 \subsection{Range Analysis}
-The integration of impedance-tuned hardware with software-defined filtering yielded profound improvements. As illustrated in Fig. \ref{fig:graph}, the visible light baseline failed abruptly at 27 cm. The unoptimized IR setup ($10\text{k}\Omega$) reached 47 cm. The fully optimized IR-SDM setup ($1\text{M}\Omega$) successfully maintained 100\% decoding accuracy up to 157 cm indoors. Decoding accuracy was empirically measured as the percentage of correctly reconstructed characters from the 44-byte test payload at varying distances.
+The integration of impedance-tuned hardware with software-defined filtering yielded profound improvements. As illustrated in Fig. \ref{fig:graph}, the visible light baseline failed abruptly at 27 cm. The unoptimized IR setup ($10\text{k}\Omega$) reached 47 cm. The fully optimized IR-Dynamic Thresholding setup ($1\text{M}\Omega$) successfully maintained 100\% decoding accuracy up to 157 cm indoors. Decoding accuracy was empirically measured as the percentage of correctly reconstructed characters from the 44-byte test payload at varying distances.
 
 \begin{figure}[htbp]
     \centering
@@ -412,7 +553,7 @@ The integration of impedance-tuned hardware with software-defined filtering yiel
 \end{figure}
 
 % \section{Conclusion and Future Work}
-% This paper presented an evolutionary approach to overcoming the physical layer limitations of low-cost optical wireless communication. By systematically advancing from a basic visible light LDR circuit to an Infrared Stepwise Derivative Method (SDM), we mitigated indoor thermal noise and extended the range up to 2m. The implementation of a software-defined Goertzel filter on the 8-bit ATmega328P architecture proved to be the most robust solution. By shifting from hardware-reliant IR sensing to digital signal processing, the system successfully bypassed the 0Hz DC saturation caused by direct sunlight. This "Virtual Filter" approach allows low-cost microcontrollers to achieve high-selectivity communication that traditionally requires expensive specialized hardware. Future work will focus on optimizing the Goertzel block size ($N$) to further increase the bitrate while maintaining the noise-rejection benefits of the software-defined optical link.
+% This paper presented an evolutionary approach to overcoming the physical layer limitations of low-cost optical wireless communication. By systematically advancing from a basic visible light LDR circuit to an Infrared Dynamic Thresholding method, we mitigated indoor thermal noise and extended the range up to 2m. The implementation of a software-defined Goertzel filter on the 8-bit ATmega328P architecture proved to be the most robust solution. By shifting from hardware-reliant IR sensing to digital signal processing, the system successfully bypassed the 0Hz DC saturation caused by direct sunlight. This "Virtual Filter" approach allows low-cost microcontrollers to achieve high-selectivity communication that traditionally requires expensive specialized hardware. Future work will focus on optimizing the Goertzel block size ($N$) to further increase the bitrate while maintaining the noise-rejection benefits of the software-defined optical link.
 
 \section{Conclusion and Future Work}
 This paper demonstrated a systematic progression in overcoming the physical layer limitations of low-cost optical wireless communication. By evolving from basic visible light sensing to an adaptive Infrared system, we mitigated photo-conductive latency and indoor thermal noise. By shifting the complexity from hardware to a software-defined paradigm—utilizing 2~kHz OOK modulation and an optimized Goertzel digital filter—the system successfully maintained 100\% decoding accuracy at ranges up to 2m, even under direct solar interference. This "virtual filter" approach highlights the potential for low-power microcontrollers to perform sophisticated signal recovery in high-noise environments without requiring specialized commercial hardware. Future work will explore increasing the baud rate by optimizing the Goertzel block size $N$ for higher-speed telemetry.
@@ -423,7 +564,7 @@ This paper demonstrated a systematic progression in overcoming the physical laye
 \appendices
 \section{Visible Light Source Code}
 
-\section{Infrared SDM Implementation}
+\section{Infrared Dynamic Thresholding Implementation}
 
 \section{Software-Defined High-Solar Ecosystem}
 

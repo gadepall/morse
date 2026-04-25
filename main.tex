@@ -543,7 +543,7 @@ where $y[-1] = y[-2] = 0$.
 
 After processing $N$ samples, the squared spectral magnitude $M^2$ at the target frequency is extracted:
 \begin{align}
-    M^2 = &y[N-1]^2 + y[N-2]^2 \\ 
+    M^2 &= y^2[N-1] + y^2[N-2] \\ 
 	&- 2 \cos\left(\frac{2\pi k}{N}\right) y[N-1] y[N-2]
 \end{align}
 Using the squared magnitude bypasses the computational cost of floating-point square roots. 

@@ -271,18 +271,12 @@ Operating in reverse-bias, the photodiode produces a photocurrent ($I_{pd}$) pro
 
 To isolate transmission pulses from fluctuating indoor IR noise, we implement a discrete-time Dynamic Thresholding algorithm. The core challenge is that the photodiode's ambient baseline is not zero; it is a floating DC offset that shifts as environmental lighting changes. To track this, the receiver converts the continuous-time analog voltage $x(t)$ into a discrete-time sequence by polling the Analog-to-Digital Converter (ADC) at designated intervals. Let $T_s$ represent this sampling period. The discrete sample index $n$ maps directly to physical continuous time via the relation $t = n T_s$, defining our sampled sequence as $x[n] = x(n T_s)$. 
 
-In our firmware implementation, non-blocking timer polling via the \texttt{millis()} function is utilized to target a sampling interval of $T_s \approx 20$ ms. It is important to note that this is a practical approximation; because hardware interrupts were bypassed in favor of a software-defined timer loop, minor microsecond-level timing jitters exist due to the variable instruction cycle overhead of the \texttt{analogRead()} function and sequential conditional logic.
-
-The algorithm calculates a rolling local mean, $\mu[n]$, over a circular buffer of $N$ samples to capture the slow-moving ambient noise floor:
+The algorithm calculates a rolling local mean, over a circular buffer of $N$ samples to capture the slow-moving ambient noise floor:
 \begin{equation}
-    \mu[n] = \frac{1}{N} \sum_{i=0}^{N-1} x[n-i] \label{eq:noise}
+    \tau[n] = \frac{1}{N} \sum_{i=0}^{N-1} x[n-i] + \sigma \label{eq:thres}
 \end{equation}
 
 This moving average inherently acts as a digital low-pass filter. To extract the high-frequency OOK pulses, a dynamic threshold $\tau[n]$ is established by adding a constant margin $\sigma$ to the local mean:
-
-\begin{equation}
-    \tau[n] = \mu[n] + \sigma \label{eq:thresh}
-\end{equation}
 
 By dynamically adjusting the threshold relative to the moving baseline, the detection zone floats alongside ambient light shifts. The logic implementation is detailed in Algorithm \ref{alg:dynamic_threshold}, and the discrete sampling behavior is visualized in Fig. \ref{fig:dynamic_graph}.
 
@@ -420,7 +414,7 @@ This process, acting as a form of subcarrier modulation, involves gating the con
     \item \textbf{DC Offset (Sun):} The solar interference resides at 0Hz.
     \item \textbf{Data Signal:} The intentional Morse pulses are now "nested" inside a 2000Hz carrier.
 \end{itemize}
-This separation allows the receiver to ignore the saturated 0Hz baseline and focus entirely on the energy oscillating at the target frequency band. This is implemented in software using the \texttt{tone()} function, which leverages the microcontroller's internal timers to generate a precise square wave. \\
+This separation allows the receiver to ignore the saturated 0Hz baseline and focus entirely on the energy oscillating at the target frequency band. \\
 Furthermore, operating the LED at a 50\% duty cycle reduces the active transmission power consumption by half compared to the continuous DC pulses observed during the Baseband IR, highly benefiting battery-constrained remote sensor nodes.
 
 \begin{figure}[htbp]

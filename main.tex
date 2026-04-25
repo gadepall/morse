@@ -507,12 +507,12 @@ By toggling the LED at 2~kHz, the receiver can selectively filter out the 0~Hz s
 \subsubsection{Receiver}
 To detect the 2~kHz carrier digitally, the ADC prescaler is reduced from 128 to 16, accelerating the sampling rate ($f_s$) to $\approx 60\text{ kHz}$. This massive oversampling provides the resolution necessary for the Goertzel algorithm \cite{smith1997}, which we utilize as a computationally lightweight digital bandpass filter. 
 
-The receiver pipeline is illustrated in Figure \ref{fig:modulated_block}. For a given target frequency index $k$ and block size $N$, the algorithm computes the intermediate state $y[n]$ for each incoming sample $x[n]$ using the second-order difference equations \cite{goertzel}:
+The receiver pipeline is illustrated in Fig. \ref{fig:modulated_block}. For a given target frequency index $k$ and block size $N$, the algorithm computes the intermediate state $y[n]$ for each incoming sample $x[n]$ using the second-order difference equations \cite{goertzel}:
 \begin{align}
     s[n] &= x[n] + 2 \cos\left(\frac{2\pi k}{N}\right) s[n-1] - s[n-2] \\
     y[n] &= s[n] - e^{-j\omega_{0}} s[n-1]
 \end{align}
-where $y[-1] = y[-2] = 0$. 
+where $y[-1] = y[-2] = 0$ and $\omega_0 = \frac{2\pi k}{N}$.
 
 \begin{figure}[htbp]
 \centering
@@ -549,6 +549,7 @@ After processing $N$ samples, the squared spectral magnitude $M^2$ at the target
     M^2 &= y^2[N-1] + y^2[N-2] \\ 
 	&- 2 \cos\left(\frac{2\pi k}{N}\right) y[N-1] y[N-2]
 \end{align}
+
 Using the squared magnitude bypasses the computational cost of floating-point square roots. 
 
 A block size of $N=80$ provides a processing window of $\approx 1.33\text{ ms}$, ensuring temporal responsiveness for decoding Morse timings. This creates a bin resolution ($\Delta f = f_s / N$) of $750\text{ Hz}$. The index $k = \text{round}(N \cdot f_{target} / f_s) = 3$ centers the filter at $2250\text{ Hz}$. This wide main lobe comfortably captures the $2000\text{ Hz}$ carrier while aggressively suppressing out-of-band signals like 0~Hz DC sunlight and 120~Hz AC flicker.

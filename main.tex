@@ -460,25 +460,22 @@ High Ambient & 150 & $\approx 0.73\text{V}$ \\
 
 Based on the timing ratios defined in Table \ref{tab:morse_timing}, a single transmission of "HELLO WORLD" consumes exactly 111 $T_u$ (inclusive of all intra-character, inter-character, and inter-word gaps). Therefore, the full 10-cycle training sequence spans 1110 $T_u$. Given our baseline $T_u = 200\text{ ms}$, this equates to a deliberate 222-second pre-transmission window. This ensures the Dynamic Thresholding buffer ($V_{noise}$) fully saturates with representative environmental data, allowing the dynamic baseline to settle completely alongside the assumed margin before the receiver attempts to decode unknown payload characters.
 
-\subsection{Frequency Modulation and Software-Defined Filtering}
+\section{Amplitude Modulation and Software-Defined Filtering}
 
-\subsubsection{Limitations in Direct Sunlight and Hardware Gain Control}
-While the initial IR setup successfully mitigated indoor noise, it typically fails in direct sunlight. The sun acts as a high-intensity IR emitter, causing the photodiode to produce a massive steady-state photocurrent. This threatens to saturate the 10-bit ADC at a constant 1023, effectively "blinding" the receiver and removing the dynamic range necessary for processing.
+\subsection{Limitations of Baseband Detection in Sunlight}
+While unmodulated IR transmission functions indoors, it fails in direct sunlight. The sun acts as a continuous, high-intensity IR source that drives a massive steady-state photocurrent, saturating the receiver's 10-bit ADC and eliminating the dynamic range needed to detect Morse pulses. 
 
-To prevent "hard" saturation, the receiver's load resistor ($R$) is decreased (e.g., from $1\text{M}\Omega$ to $10\text{k}\Omega$) when operating outdoors. While this keeps the DC component within the ADC's measurable range, it significantly reduces the signal-to-noise ratio (SNR), as the intentional AC pulses become minute fluctuations on a massive DC floor. This necessitates a transition to a frequency-domain detection approach to isolate the signal. 
+To prevent this "hard" saturation outdoors, the receiver's load resistor can be decreased (e.g., from $1\text{M}\Omega$ to $10\text{k}\Omega$). While this keeps the solar DC component within measurable bounds, it severely degrades the signal-to-noise ratio (SNR), reducing the intentional pulses to minute fluctuations on a massive DC floor. Recovering this attenuated signal requires transitioning from baseband amplitude tracking to frequency-selective filtering.
 
-By reducing $R$, we trade off raw voltage swing for headroom, relying on the high-gain nature of the Goertzel algorithm to recover the attenuated signal from the resulting narrow dynamic range.
+\subsection{2~kHz On-Off Keying (OOK) Modulation}
+To isolate the data from the solar baseline, we implement On-Off Keying (OOK), a fundamental form of Amplitude Modulation (AM). Instead of emitting a static DC pulse, the transmitter modulates the IR LED with a 2~kHz square wave carrier during every active Morse symbol.
 
-\subsubsection{2~kHz On-Off Keying (OOK) Modulation}
-To resolve solar saturation, we transition to a Software-Defined Optical paradigm. Instead of a static DC pulse, the transmitter modulates the IR LED with a 2~kHz square wave carrier during every Morse "mark" (dit or dah).
-
-This process, acting as a form of subcarrier modulation, involves gating the continuous DC transmission pulse with a high-frequency sequence. By toggling the LED at 2~kHz (a 50\% duty cycle), we effectively perform a frequency-domain shift:
+This modulation shifts the transmission into the frequency domain:
 \begin{itemize}
-    \item \textbf{DC Offset (Sun):} The solar interference resides at 0Hz.
-    \item \textbf{Data Signal:} The intentional Morse pulses are now "nested" inside a 2000Hz carrier.
+    \item \textbf{DC Offset (Sun):} Solar interference remains concentrated at 0~Hz.
+    \item \textbf{Data Signal:} The Morse pulses are nested inside a 2000~Hz carrier band.
 \end{itemize}
-This separation allows the receiver to ignore the saturated 0Hz baseline and focus entirely on the energy oscillating at the target frequency band. \\
-Furthermore, operating the LED at a 50\% duty cycle reduces the active transmission power consumption by half compared to the continuous DC pulses observed during the Baseband IR, highly benefiting battery-constrained remote sensor nodes.
+By toggling the LED at 2~kHz, the receiver can selectively filter out the 0~Hz solar bias and evaluate only the oscillating AC energy. Operating at a 50\% duty cycle also halves the active transmission power, extending battery life for remote nodes.
 
 \begin{figure}[htbp]
     \centering
@@ -498,23 +495,21 @@ Furthermore, operating the LED at a 50\% duty cycle reduces the active transmiss
         \draw[blue] (4,0) -- (4.1,0) -- (4.1,1) -- (4.2,1) -- (4.2,0) -- (4.3,0) -- (4.3,1) -- (4.4,1) -- (4.4,0) -- (4.5,0) -- (4.5,1) -- (4.6,1) -- (4.6,0) -- (4.7,0) -- (4.7,1) -- (4.8,1) -- (4.8,0) -- (4.9,0) -- (4.9,1) -- (5.0,1) -- (5.0,0);
         
         \node[blue, align=center, scale=0.8] at (4.5,1.5) {2~kHz Square Wave\\Carrier};
-        \node[red, align=center, scale=0.8] at (3,-0.3) {0Hz Solar Bias Ignored};
+        \node[red, align=center, scale=0.8] at (3,-0.3) {0~Hz Solar Bias Ignored};
     \end{tikzpicture}
-    \caption{Modulation: The logic envelope acts as a gate for the 2~kHz square wave. This subcarrier modulation enables frequency-selective filtering at the receiver.}
+    \caption{Amplitude Modulation: The Morse envelope gates a 2~kHz subcarrier, enabling frequency-selective filtering at the receiver.}
     \label{fig:modulation}
 \end{figure}
 
-\subsubsection{Sampling and Goertzel Digital Signal Processing}
-To detect the 2~kHz carrier without external hardware filters, the receiver's ADC must satisfy the Nyquist theorem (requiring a minimum sampling rate of 4~kHz). We modify the \texttt{ADCSRA} register to change the prescaler from 128 to 16, accelerating the sampling rate from $\approx 10\text{ kHz}$ to $\approx 60\text{ kHz}$, which provides massive oversampling for high-resolution frequency detection.
+\subsection{Sampling and Goertzel Digital Signal Processing}
+To detect the 2~kHz carrier digitally, the ADC prescaler is reduced from 128 to 16, accelerating the sampling rate ($f_s$) to $\approx 60\text{ kHz}$. This massive oversampling provides the resolution necessary for the Goertzel algorithm \cite{smith1997}, which we utilize as a computationally lightweight digital bandpass filter. 
 
-We then implement the Goertzel algorithm \cite{smith1997} to act as a digital bandpass filter. Unlike a full Fast Fourier Transform (FFT) that computes all frequency bins, the Goertzel algorithm is computationally optimized to evaluate the spectral energy of a single target frequency ($f_{target} = 2000\text{ Hz}$). 
-
-The system pipeline is illustrated in Figure \ref{fig:modulated_block}. Mathematically, the algorithm operates as a second-order Infinite Impulse Response (IIR) filter\cite{goertzel}. For a given target frequency index $k$ and block size $N$, the filter computes the intermediate state $y[n]$ for each incoming discrete sample $x[n]$ using the difference equation:
+The receiver pipeline is illustrated in Figure \ref{fig:modulated_block}. For a given target frequency index $k$ and block size $N$, the algorithm computes the intermediate state $y[n]$ for each incoming sample $x[n]$ using the second-order difference equations \cite{goertzel}:
 \begin{align}
     s[n] &= x[n] + 2 \cos\left(\frac{2\pi k}{N}\right) s[n-1] - s[n-2] \\
-	y[n] &= s[n] - e^{-j\omega_{0}} s[n-1]
+    y[n] &= s[n] - e^{-j\omega_{0}} s[n-1]
 \end{align}
-where initial states are defined as $y[-1] = y[-2] = 0$. 
+where $y[-1] = y[-2] = 0$. 
 
 \begin{figure}[htbp]
 \centering
@@ -529,12 +524,12 @@ where initial states are defined as $y[-1] = y[-2] = 0$.
 \node[block, right=0.8cm of xt] (adc) {ADC\\($f_s \approx 60$\,kHz)};
 \node[block, right=1.4cm of adc] (bpf) {Goertzel\\Filter};
 
-% Bottom Row Nodes (Folded backwards for a U-Shape flow)
+% Bottom Row Nodes
 \node[block, below=1.0cm of bpf] (mag) {Magnitude\\Eval ($M^2$)};
-\node[block, left=1.4cm of mag] (thresh) {$M^2 \gtrless Threshold$};
+\node[block, left=1.4cm of mag] (thresh) {$M^2 \gtrless \tau_{mag}$};
 \node[left=0.8cm of thresh, align=center] (out) {Output};
 
-% Arrows with labels
+% Arrows
 \draw[arrow] (xt) -- (adc);
 \draw[arrow] (adc) -- node[above] {$x[n]$} (bpf);
 \draw[arrow] (bpf) -- node[right] {$y[n]$} (mag);
@@ -542,39 +537,30 @@ where initial states are defined as $y[-1] = y[-2] = 0$.
 \draw[arrow] (thresh) -- (out);
 \end{tikzpicture}%
 }
-\caption{Block Diagram for Modulated IR Receiver ($Threshold = 15000$)}
+\caption{Block Diagram for Modulated IR Receiver ($\tau_{mag} = 15000$)}
 \label{fig:modulated_block}
 \end{figure}
 
-After processing all $N$ samples in the block, the squared spectral magnitude $M^2$ (representing the signal power at the target frequency) is evaluated using the final two states:
+After processing $N$ samples, the squared spectral magnitude $M^2$ at the target frequency is extracted:
 \begin{align}
-    M^2 = y[N-1]^2 + y[N-2]^2 - 2 \cos\left(\frac{2\pi k}{N}\right) y[N-1] y[N-2]
+    M^2 = &y[N-1]^2 + y[N-2]^2 \\ 
+	&- 2 \cos\left(\frac{2\pi k}{N}\right) y[N-1] y[N-2]
 \end{align}
-We intentionally evaluate the squared magnitude $M^2$ rather than the absolute magnitude to avoid the high computational latency of floating-point square root operations on an 8-bit microcontroller.
+Using the squared magnitude bypasses the computational cost of floating-point square roots. 
 
-The choice of block size $N=80$ represents a deliberate compromise between spectral resolution and temporal responsiveness. At a sampling rate of $f_s \approx 60\text{ kHz}$, an 80-sample block processes in approximately $1.33\text{ ms}$. This rapid turnover is crucial for accurately capturing the precise timing of Morse code durations without inducing blocking delays in the microcontroller loop. 
+A block size of $N=80$ provides a processing window of $\approx 1.33\text{ ms}$, ensuring temporal responsiveness for decoding Morse timings. This creates a bin resolution ($\Delta f = f_s / N$) of $750\text{ Hz}$. The index $k = \text{round}(N \cdot f_{target} / f_s) = 3$ centers the filter at $2250\text{ Hz}$. This wide main lobe comfortably captures the $2000\text{ Hz}$ carrier while aggressively suppressing out-of-band signals like 0~Hz DC sunlight and 120~Hz AC flicker.
 
-In the discrete frequency domain, the bin resolution is defined as $\Delta f = f_s / N$, yielding $60000 / 80 = 750\text{ Hz}$. The target frequency index $k$ is calculated as $\text{round}(N \cdot f_{target} / f_s) = \text{round}(2.67) = 3$. Consequently, the mathematical center of this digital bandpass filter is located at $3 \times 750 = 2250\text{ Hz}$. While this establishes a slight offset from the $2000\text{ Hz}$ carrier, the $750\text{ Hz}$ bin width ensures the carrier falls securely within the primary constructive lobe of the filter, yielding a robust magnitude spike. Conversely, $0\text{ Hz}$ solar DC bias and $120\text{ Hz}$ indoor flicker fall deep into the filter's stopband and destructively cancel out over the integration period.
+\subsection{Static Thresholding and OOK Demodulation}
+While $M^2$ theoretically approaches zero during transmission gaps, ADC quantization and thermal noise establish a low-level baseline. We apply an empirical static threshold ($\tau_{mag} = 15000$) to digitize the signal. 
 
-\subsubsection{Static Thresholding and OOK Demodulation}
-In an ideal, noiseless environment, the Goertzel algorithm would compute a squared magnitude of exactly $M^2 = 0$ when the 2~kHz transmitter is off. In practice, however, the receiver's baseline is subject to thermal noise, ADC quantization errors, and residual harmonics from ambient electromagnetic interference. Consequently, the quiescent state continuously yields random, low-level spectral noise.
-
-To translate the continuous Goertzel output into a discrete binary sequence, an empirical static threshold ($\tau_{mag}$) must be established to differentiate between ambient noise and a legitimate 2~kHz pulse. In this implementation, the threshold is defined as:
-\begin{equation}
-    \tau_{mag} = 15000
-\end{equation}
-
-Because the algorithm accumulates 80 samples of 10-bit ADC values, constructive interference during a valid 2~kHz pulse produces massive squared magnitudes, typically on the order of $10^5$ to $10^6$. The threshold $\tau_{mag} = 15000$ is positioned sufficiently high to safely clear the baseline noise floor, yet low enough to detect attenuated signals from distant transmitters.
-
-During the real-time loop, the system acts as a digital slicer for On-Off Keying (OOK) demodulation by evaluating the conditional state:
+Because constructive interference from a valid 2~kHz carrier produces $M^2$ values on the order of $10^5$, this threshold safely clears the noise floor while maintaining sensitivity to distant transmissions. The real-time OOK demodulation operates as a binary slicer:
 \begin{equation}
     \text{Pulse Detected} = \begin{cases} 
       \text{True (HIGH)}, & \text{if } M^2 > \tau_{mag} \\
       \text{False (LOW)}, & \text{otherwise} 
    \end{cases}
 \end{equation}
-
-Crucially, this approach eliminates the need for the adaptive moving-average buffer required in unmodulated IR detection. Because the Goertzel filter mathematically isolates the target frequency and inherently suppresses the 0~Hz DC offset from sunlight, the baseline remains absolutely stable. This stability allows the system to rely on a highly efficient, hardcoded static threshold without risking false positives from environmental lighting shifts.
+By filtering out the wandering DC bias mathematically, the Goertzel algorithm ensures absolute baseline stability. This eliminates the need for complex adaptive thresholding and allows robust OOK demodulation under variable lighting conditions.
 
 \section{Experimental Results}
 

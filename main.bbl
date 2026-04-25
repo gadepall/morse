@@ -62,4 +62,11 @@ S.~W. Smith, \emph{The Scientist and Engineer's Guide to Digital Signal
   Processing}.\hskip 1em plus 0.5em minus 0.4em\relax San Diego, CA, USA:
   California Technical Publishing, 1997.
 
+\bibitem{goertzel}
+\BIBentryALTinterwordspacing
+{Wikipedia contributors}. (2024) Goertzel algorithm. [Online]. Accessed: May
+  20, 2024. [Online]. Available:
+  \url{https://en.wikipedia.org/wiki/Goertzel_algorithm}
+\BIBentrySTDinterwordspacing
+
 \end{thebibliography}

@@ -509,7 +509,7 @@ To detect the 2~kHz carrier without external hardware filters, the receiver's AD
 
 We then implement the Goertzel algorithm \cite{smith1997} to act as a digital bandpass filter. Unlike a full Fast Fourier Transform (FFT) that computes all frequency bins, the Goertzel algorithm is computationally optimized to evaluate the spectral energy of a single target frequency ($f_{target} = 2000\text{ Hz}$). 
 
-The system pipeline is illustrated in Figure \ref{fig:goertzel_pipeline}. Mathematically, the algorithm operates as a second-order Infinite Impulse Response (IIR) filter\cite{goertzel}. For a given target frequency index $k$ and block size $N$, the filter computes the intermediate state $y[n]$ for each incoming discrete sample $x[n]$ using the difference equation:
+The system pipeline is illustrated in Figure \ref{fig:modulated_block}. Mathematically, the algorithm operates as a second-order Infinite Impulse Response (IIR) filter\cite{goertzel}. For a given target frequency index $k$ and block size $N$, the filter computes the intermediate state $y[n]$ for each incoming discrete sample $x[n]$ using the difference equation:
 \begin{align}
     s[n] &= x[n] + 2 \cos\left(\frac{2\pi k}{N}\right) s[n-1] - s[n-2] \\
 	y[n] &= s[n] - e^{-j\omega_{0}} s[n-1]

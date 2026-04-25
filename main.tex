@@ -1,7 +1,6 @@
 \documentclass[conference]{IEEEtran}
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
-\usepackage{algorithmic}
 \usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{xcolor}
@@ -289,23 +288,23 @@ By dynamically adjusting the threshold relative to the moving baseline, the dete
 
 \begin{algorithm}[htbp]
 \caption{Dynamic Thresholding for OOK Demodulation}
-\label{alg:dynamic_thresh}
+\label{alg:dynamic_threshold}
 \begin{algorithmic}[1]
-\REQUIRE Discrete input sequence $x[n]$, Window size $N$, Margin $\sigma$
-\STATE Initialize circular buffer $B$ of size $N$ to 0
-\STATE Initialize running sum $S \leftarrow 0$
-\FOR{each strictly timed sampling interval $n$}
-    \STATE $S \leftarrow S - B[n \bmod N]$ \COMMENT{Remove oldest sample}
-    \STATE $B[n \bmod N] \leftarrow x[n]$ \COMMENT{Insert new sample}
-    \STATE $S \leftarrow S + x[n]$
-    \STATE $\mu[n] \leftarrow S / N$ \COMMENT{Calculate local mean}
-    \STATE $\tau[n] \leftarrow \mu[n] + \sigma$ \COMMENT{Set floating threshold}
-    \IF{$x[n] > \tau[n]$}
-        \STATE Register logical HIGH (Pulse active)
-    \ELSE
-        \STATE Register logical LOW (Idle)
-    \ENDIF
-\ENDFOR
+\Require Discrete input sequence $x[n]$, Window size $N$, Margin $\sigma$
+\State Initialize circular buffer $B$ of size $N$ to 0
+\State Initialize running sum $S \leftarrow 0$
+\For{each strictly timed sampling interval $n$}
+    \State $S \leftarrow S - B[n \bmod N]$ \Comment{Remove oldest sample}
+    \State $B[n \bmod N] \leftarrow x[n]$ \Comment{Insert new sample}
+    \State $S \leftarrow S + x[n]$
+    \State $\mu[n] \leftarrow S / N$ \Comment{Calculate local mean}
+    \State $\tau[n] \leftarrow \mu[n] + \sigma$ \Comment{Set floating threshold}
+    \If{$x[n] > \tau[n]$}
+        \State Register logical HIGH (Pulse active)
+    \Else
+        \State Register logical LOW (Idle)
+    \EndIf
+\EndFor
 \end{algorithmic}
 \end{algorithm}
 

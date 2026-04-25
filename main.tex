@@ -460,14 +460,14 @@ High Ambient & 150 & $\approx 0.73\text{V}$ \\
 
 Based on the timing ratios defined in Table \ref{tab:morse_timing}, a single transmission of "HELLO WORLD" consumes exactly 111 $T_u$ (inclusive of all intra-character, inter-character, and inter-word gaps). Therefore, the full 10-cycle training sequence spans 1110 $T_u$. Given our baseline $T_u = 200\text{ ms}$, this equates to a deliberate 222-second pre-transmission window. This ensures the Dynamic Thresholding buffer ($V_{noise}$) fully saturates with representative environmental data, allowing the dynamic baseline to settle completely alongside the assumed margin before the receiver attempts to decode unknown payload characters.
 
-\section{Amplitude Modulation and Software-Defined Filtering}
+\section{Amplitude Modulation}
 
 \subsection{Limitations of Baseband Detection in Sunlight}
 While unmodulated IR transmission functions indoors, it fails in direct sunlight. The sun acts as a continuous, high-intensity IR source that drives a massive steady-state photocurrent, saturating the receiver's 10-bit ADC and eliminating the dynamic range needed to detect Morse pulses. 
 
 To prevent this "hard" saturation outdoors, the receiver's load resistor can be decreased (e.g., from $1\text{M}\Omega$ to $10\text{k}\Omega$). While this keeps the solar DC component within measurable bounds, it severely degrades the signal-to-noise ratio (SNR), reducing the intentional pulses to minute fluctuations on a massive DC floor. Recovering this attenuated signal requires transitioning from baseband amplitude tracking to frequency-selective filtering.
 
-\subsection{2~kHz On-Off Keying (OOK) Modulation}
+\subsection{Modulation}
 To isolate the data from the solar baseline, we implement On-Off Keying (OOK), a fundamental form of Amplitude Modulation (AM). Instead of emitting a static DC pulse, the transmitter modulates the IR LED with a 2~kHz square wave carrier during every active Morse symbol.
 
 This modulation shifts the transmission into the frequency domain:
@@ -501,7 +501,9 @@ By toggling the LED at 2~kHz, the receiver can selectively filter out the 0~Hz s
     \label{fig:modulation}
 \end{figure}
 
-\subsection{Sampling and Goertzel Digital Signal Processing}
+\subsection{Demodulation}
+
+\subsubsection{Receiver}
 To detect the 2~kHz carrier digitally, the ADC prescaler is reduced from 128 to 16, accelerating the sampling rate ($f_s$) to $\approx 60\text{ kHz}$. This massive oversampling provides the resolution necessary for the Goertzel algorithm \cite{smith1997}, which we utilize as a computationally lightweight digital bandpass filter. 
 
 The receiver pipeline is illustrated in Figure \ref{fig:modulated_block}. For a given target frequency index $k$ and block size $N$, the algorithm computes the intermediate state $y[n]$ for each incoming sample $x[n]$ using the second-order difference equations \cite{goertzel}:
@@ -550,7 +552,7 @@ Using the squared magnitude bypasses the computational cost of floating-point sq
 
 A block size of $N=80$ provides a processing window of $\approx 1.33\text{ ms}$, ensuring temporal responsiveness for decoding Morse timings. This creates a bin resolution ($\Delta f = f_s / N$) of $750\text{ Hz}$. The index $k = \text{round}(N \cdot f_{target} / f_s) = 3$ centers the filter at $2250\text{ Hz}$. This wide main lobe comfortably captures the $2000\text{ Hz}$ carrier while aggressively suppressing out-of-band signals like 0~Hz DC sunlight and 120~Hz AC flicker.
 
-\subsection{Static Thresholding and OOK Demodulation}
+\subsubsection{Static Thresholding and OOK Demodulation}
 While $M^2$ theoretically approaches zero during transmission gaps, ADC quantization and thermal noise establish a low-level baseline. We apply an empirical static threshold ($\tau_{mag} = 15000$) to digitize the signal. 
 
 Because constructive interference from a valid 2~kHz carrier produces $M^2$ values on the order of $10^5$, this threshold safely clears the noise floor while maintaining sensitivity to distant transmissions. The real-time OOK demodulation operates as a binary slicer:

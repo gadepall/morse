@@ -30,28 +30,39 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}Visible Light Baseline}{2}{subsection.3.1}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces The "Iceberg Effect" illustrating temporal truncation caused by improper static thresholding of an LDR signal.}}{2}{figure.4}\protected@file@percent }
 \newlabel{fig:iceberg}{{4}{2}{The "Iceberg Effect" illustrating temporal truncation caused by improper static thresholding of an LDR signal}{figure.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}Infrared Evolution and Dynamic Thresholding}{2}{subsection.3.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-B}1}Hardware Optimization and Adaptive Filtering}{2}{subsubsection.3.2.1}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {IV}{\ignorespaces Adaptive Morse Protocol Timings to combat "Iceberg Effect"}}{3}{table.4}\protected@file@percent }
 \newlabel{tab:morse_timing-modified}{{IV}{3}{Adaptive Morse Protocol Timings to combat "Iceberg Effect"}{table.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}Infrared Evolution and Dynamic Thresholding}{3}{subsection.3.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Block Diagram of Receiver used in IR with Dynamic Thresholding}}{3}{figure.5}\protected@file@percent }
+\newlabel{fig:dynamic_threshold_adc}{{5}{3}{Block Diagram of Receiver used in IR with Dynamic Thresholding}{figure.5}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-B}1}Hardware Optimization and Adaptive Filtering}{3}{subsubsection.3.2.1}\protected@file@percent }
 \newlabel{eq:thres}{{1}{3}{Hardware Optimization and Adaptive Filtering}{equation.1}{}}
 \@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces Dynamic Thresholding for OOK Demodulation}}{3}{algorithm.1}\protected@file@percent }
 \newlabel{alg:dynamic_threshold}{{1}{3}{Hardware Optimization and Adaptive Filtering}{algorithm.1}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Exact mathematical mapping of the "HELLO WORLD" sequence. With a base time unit $T_u = 200$ ms and sample interval $T_s = 20$ ms, each standard Dit and Gap captures precisely 10 discrete samples. Because the buffer size is massive ($N=500$), the local mean $\mu [n]$ remains highly stable and does not climb high enough to clip the signal during pulses, completely preventing baseline wander.}}{3}{figure.5}\protected@file@percent }
-\newlabel{fig:dynamic_graph}{{5}{3}{Exact mathematical mapping of the "HELLO WORLD" sequence. With a base time unit $T_u = 200$ ms and sample interval $T_s = 20$ ms, each standard Dit and Gap captures precisely 10 discrete samples. Because the buffer size is massive ($N=500$), the local mean $\mu [n]$ remains highly stable and does not climb high enough to clip the signal during pulses, completely preventing baseline wander}{figure.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Exact mathematical mapping of the "HELLO WORLD" sequence. With a base time unit $T_u = 200$ ms and sample interval $T_s = 20$ ms, each standard Dit and Gap captures precisely 10 discrete samples. Because the buffer size is massive ($N=500$), the local mean $\mu [n]$ remains highly stable and does not climb high enough to clip the signal during pulses, completely preventing baseline wander.}}{3}{figure.6}\protected@file@percent }
+\newlabel{fig:dynamic_graph}{{6}{3}{Exact mathematical mapping of the "HELLO WORLD" sequence. With a base time unit $T_u = 200$ ms and sample interval $T_s = 20$ ms, each standard Dit and Gap captures precisely 10 discrete samples. Because the buffer size is massive ($N=500$), the local mean $\mu [n]$ remains highly stable and does not climb high enough to clip the signal during pulses, completely preventing baseline wander}{figure.6}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-B}2}Dynamic Thresholding Initialization and Training Sequence}{3}{subsubsection.3.2.2}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {V}{\ignorespaces Initial Assumed Signal Margins ($\sigma $) Prior to Stabilization (1 M$\Omega $ Setup)}}{3}{table.5}\protected@file@percent }
 \newlabel{tab:assumed_thresholds}{{V}{3}{Initial Assumed Signal Margins ($\sigma $) Prior to Stabilization (1 M$\Omega $ Setup)}{table.5}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-C}}Frequency Modulation and Software-Defined Filtering}{3}{subsection.3.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}1}Limitations in Direct Sunlight and Hardware Gain Control}{3}{subsubsection.3.3.1}\protected@file@percent }
 \citation{smith1997}
+\citation{goertzel}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-C}}Frequency Modulation and Software-Defined Filtering}{4}{subsection.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}1}Limitations in Direct Sunlight and Hardware Gain Control}{4}{subsubsection.3.3.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}2}2~kHz On-Off Keying (OOK) Modulation}{4}{subsubsection.3.3.2}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Modulation: The logic envelope acts as a gate for the 2~kHz square wave. This subcarrier modulation enables frequency-selective filtering at the receiver.}}{4}{figure.6}\protected@file@percent }
-\newlabel{fig:modulation}{{6}{4}{Modulation: The logic envelope acts as a gate for the 2~kHz square wave. This subcarrier modulation enables frequency-selective filtering at the receiver}{figure.6}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}3}Sampling and Goertzel Digital Signal Processing}{4}{subsubsection.3.3.3}\protected@file@percent }
-\@writefile{loa}{\contentsline {algorithm}{\numberline {2}{\ignorespaces Real-Time Goertzel Single-Bin DFT}}{4}{algorithm.2}\protected@file@percent }
-\newlabel{alg:goertzel}{{2}{4}{Sampling and Goertzel Digital Signal Processing}{algorithm.2}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}4}Static Thresholding and OOK Demodulation}{4}{subsubsection.3.3.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Modulation: The logic envelope acts as a gate for the 2~kHz square wave. This subcarrier modulation enables frequency-selective filtering at the receiver.}}{4}{figure.7}\protected@file@percent }
+\newlabel{fig:modulation}{{7}{4}{Modulation: The logic envelope acts as a gate for the 2~kHz square wave. This subcarrier modulation enables frequency-selective filtering at the receiver}{figure.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Block Diagram for Modulated IR Receiver ($Threshold = 15000$)}}{4}{figure.8}\protected@file@percent }
+\newlabel{fig:modulated_block}{{8}{4}{Block Diagram for Modulated IR Receiver ($Threshold = 15000$)}{figure.8}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}4}Static Thresholding and OOK Demodulation}{5}{subsubsection.3.3.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {IV}Experimental Results}{5}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-A}}Throughput and Bitrate Analysis}{5}{subsection.4.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {VI}{\ignorespaces System Performance Comparison (44-Byte Sentence)}}{5}{table.6}\protected@file@percent }
+\newlabel{tab:bps}{{VI}{5}{System Performance Comparison (44-Byte Sentence)}{table.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-B}}Range Analysis}{5}{subsection.4.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Comparative analysis of decoding accuracy over distance across the configurations.}}{5}{figure.9}\protected@file@percent }
+\newlabel{fig:graph}{{9}{5}{Comparative analysis of decoding accuracy over distance across the configurations}{figure.9}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {V}Conclusion and Future Work}{5}{section.5}\protected@file@percent }
 \bibstyle{IEEEtran}
 \bibdata{references}
 \bibcite{elgala2011}{1}
@@ -62,16 +73,7 @@
 \bibcite{rajagopal2012}{6}
 \bibcite{uysal2015}{7}
 \bibcite{smith1997}{8}
-\@writefile{toc}{\contentsline {section}{\numberline {IV}Experimental Results}{5}{section.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-A}}Throughput and Bitrate Analysis}{5}{subsection.4.1}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {VI}{\ignorespaces System Performance Comparison (44-Byte Sentence)}}{5}{table.6}\protected@file@percent }
-\newlabel{tab:bps}{{VI}{5}{System Performance Comparison (44-Byte Sentence)}{table.6}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-B}}Range Analysis}{5}{subsection.4.2}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Comparative analysis of decoding accuracy over distance across the configurations.}}{5}{figure.7}\protected@file@percent }
-\newlabel{fig:graph}{{7}{5}{Comparative analysis of decoding accuracy over distance across the configurations}{figure.7}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {V}Conclusion and Future Work}{5}{section.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{References}{5}{section*.1}\protected@file@percent }
-\bibcite{mitra2006}{9}
+\@writefile{toc}{\contentsline {section}{References}{6}{section*.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{Appendix\nobreakspace  A: Visible Light Source Code}{6}{section*.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{Appendix\nobreakspace  B: Infrared Dynamic Thresholding Implementation}{6}{section*.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{Appendix\nobreakspace  C: Software-Defined High-Solar Ecosystem}{6}{section*.4}\protected@file@percent }

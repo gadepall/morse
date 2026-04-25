@@ -264,7 +264,70 @@ Inter-word gap            & LOW (OFF)            &  $1600\text{ ms}$ \\ \hline
 \end{tabular}
 \end{table}
 
+\newpage
+
 \subsection{Infrared Evolution and Dynamic Thresholding}
+
+\begin{figure}[htbp]
+    \centering
+    % \resizebox forces the diagram to fit the column width exactly.
+    % Requires \usepackage{graphicx} in your preamble.
+    \resizebox{0.7\columnwidth}{!}{%
+    \begin{tikzpicture}[
+        auto, 
+        node distance=0.8cm, % Reduced vertical/horizontal spacing
+        >=latex,
+        % Added font=\small to reduce text footprint
+        block/.style={rectangle, draw, align=center, minimum height=2.5em, fill=gray!10, rounded corners=2pt, font=\small},
+        sum/.style={draw, circle, minimum size=1.5em, inner sep=0pt, font=\large} % Style for the + symbol
+    ]
+
+        % 1. Define Nodes
+        \node (analog) {$x(t)$};
+        \node [block, right=0.4cm of analog] (adc) {ADC};
+        
+        % Split coordinate for the bypass line
+        \node [coordinate, right=0.6cm of adc] (split) {};
+        
+        % Main vertical processing stack
+        \node [block, right=0.6cm of split] (filter) {Moving Average\\Filter (Size $N$)};
+        \node [sum, below=0.8cm of filter] (adder) {$+$}; % <-- Replaced Adder block with + symbol
+        \node [block, below=0.8cm of adder] (comp) {Threshold\\($x[n] \gtrless \tau[n]$)}; 
+        
+        % Margin tucked closely to the right
+        \node [block, right=0.4cm of adder] (margin) {Margin\\($\sigma$)};
+        
+        % Output moved BELOW the comparator to save horizontal space
+        \node [block, below=0.6cm of comp] (output) {Output\\(H/L)};
+
+        % 2. Draw Routing Paths
+        % Analog input into ADC
+        \draw [->] (analog) -- (adc);
+        
+        % ADC output to the split, labeled as the discrete x[n] sequence
+        \draw [-] (adc) -- node[above, font=\small] {$x[n]$} (split);
+        
+        % Top path into filter
+        \draw [->] (split) -- (filter.west);
+        
+        % Bypass line drops straight down from the split, then turns right into comparator
+        \draw [->] (split) |- (comp.west);
+
+        % Vertical logic flow
+        \draw [->] (filter.south) -- node[left, font=\small] {$\mu[n]$} (adder.north);
+        \draw [->] (adder.south) -- node[left, font=\small] {$\tau[n]$} (comp.north);
+        
+        % Side connections
+        \draw [->] (margin.west) -- (adder.east);
+        
+        % Output connection (now vertical)
+        \draw [->] (comp.south) -- (output.north);
+
+    \end{tikzpicture}%
+    }
+    \caption{Block Diagram of Receiver used in IR with Dynamic Thresholding}
+    \label{fig:dynamic_threshold_adc}
+\end{figure}
 
 \subsubsection{Hardware Optimization and Adaptive Filtering}
 Operating in reverse-bias, the photodiode produces a photocurrent ($I_{pd}$) proportional to the incident photon flux; consequently, the voltage sampled by the ADC is governed by $V_{adc} = I_{pd} \times R$. By increasing $R$ from $10\text{ k}\Omega$ to $1\text{ M}\Omega$, sensitivity was maximized, extending the raw range to 1.57 meters indoors.
@@ -444,37 +507,54 @@ Furthermore, operating the LED at a 50\% duty cycle reduces the active transmiss
 \subsubsection{Sampling and Goertzel Digital Signal Processing}
 To detect the 2~kHz carrier without external hardware filters, the receiver's ADC must satisfy the Nyquist theorem (requiring a minimum sampling rate of 4~kHz). We modify the \texttt{ADCSRA} register to change the prescaler from 128 to 16, accelerating the sampling rate from $\approx 10\text{ kHz}$ to $\approx 60\text{ kHz}$, which provides massive oversampling for high-resolution frequency detection.
 
-We then implement the Goertzel algorithm \cite{smith1997} to act as a digital bandpass filter. Unlike a full Fast Fourier Transform (FFT) that computes all frequency bins, the Goertzel algorithm is computationally optimized to evaluate the spectral energy of a single target frequency ($f_{target} = 2000\text{ Hz}$). Mathematically, it operates similarly to a second-order Infinite Impulse Response (IIR) filter. It effectively convolves the input signal with a complex sinusoid at the target frequency; target frequencies constructively interfere and accumulate, while off-target frequencies (like 0~Hz DC sunlight or 120~Hz AC flicker) destructively cancel out over the integration period. 
+We then implement the Goertzel algorithm \cite{smith1997} to act as a digital bandpass filter. Unlike a full Fast Fourier Transform (FFT) that computes all frequency bins, the Goertzel algorithm is computationally optimized to evaluate the spectral energy of a single target frequency ($f_{target} = 2000\text{ Hz}$). 
 
-The procedure is detailed in Algorithm \ref{alg:goertzel}. The variable $M^2$ represents the squared spectral magnitude (or power) of the signal at the target frequency. We intentionally evaluate the squared magnitude $M^2$ rather than the absolute magnitude $M$ to avoid the high computational cost of floating-point square root operations on an 8-bit microcontroller.
+The system pipeline is illustrated in Figure \ref{fig:goertzel_pipeline}. Mathematically, the algorithm operates as a second-order Infinite Impulse Response (IIR) filter\cite{goertzel}. For a given target frequency index $k$ and block size $N$, the filter computes the intermediate state $y[n]$ for each incoming discrete sample $x[n]$ using the difference equation:
+\begin{align}
+    s[n] &= x[n] + 2 \cos\left(\frac{2\pi k}{N}\right) s[n-1] - s[n-2] \\
+	y[n] &= s[n] - e^{-j\omega_{0}} s[n-1]
+\end{align}
+where initial states are defined as $y[-1] = y[-2] = 0$. 
 
-\begin{algorithm}[htbp]
-\caption{Real-Time Goertzel Single-Bin DFT}
-\label{alg:goertzel}
-\begin{algorithmic}[1]
-\Require $N$ (Block size, e.g., 80)
-\Require $k$ (Target frequency index)
-\Require $x[n]$ (Incoming ADC samples)
-\State \textbf{Initialization:}
-\State $\omega \gets \frac{2 \pi k}{N}$
-\State $\text{coeff} \gets 2 \cos(\omega)$
-\State $q_1 \gets 0$
-\State $q_2 \gets 0$
-\Statex
-\State \textbf{Processing Loop (Per Block):}
-\For{$n = 0$ to $N - 1$}
-    \State $q_0 \gets \text{coeff} \cdot q_1 - q_2 + x[n]$
-    \State $q_2 \gets q_1$
-    \State $q_1 \gets q_0$
-\EndFor
-\Statex
-\State \textbf{Magnitude Evaluation:}
-\State $M^2 \gets q_1^2 + q_2^2 - (\text{coeff} \cdot q_1 \cdot q_2)$
-\State \Return $M^2$
-\end{algorithmic}
-\end{algorithm}
+\begin{figure}[htbp]
+\centering
+\resizebox{0.9\columnwidth}{!}{%
+\begin{tikzpicture}[
+    auto,
+    block/.style={rectangle, draw, thick, text width=2.2cm, align=center, minimum height=1.2cm},
+    arrow/.style={-stealth, thick}
+]
+% Top Row Nodes
+\node (xt) {$x(t)$};
+\node[block, right=0.8cm of xt] (adc) {ADC\\($f_s \approx 60$\,kHz)};
+\node[block, right=1.4cm of adc] (bpf) {Goertzel\\Filter};
 
-After $N=80$ samples (which takes approximately $1.33\text{ ms}$ to process at 60~kHz), the squared magnitude $M^2$ is evaluated against a static threshold. Because DC sunlight and indoor flicker do not resonate with the pre-computed coefficient, their resultant magnitude approaches zero. This effectively neutralizes the moving noise floor that typically requires adaptive dynamic thresholding in IR communications, allowing this Frequency-Modulated system to reliably "see" the 2~kHz pulses even through a saturated DC bias.
+% Bottom Row Nodes (Folded backwards for a U-Shape flow)
+\node[block, below=1.0cm of bpf] (mag) {Magnitude\\Eval ($M^2$)};
+\node[block, left=1.4cm of mag] (thresh) {$M^2 \gtrless Threshold$};
+\node[left=0.8cm of thresh, align=center] (out) {Output};
+
+% Arrows with labels
+\draw[arrow] (xt) -- (adc);
+\draw[arrow] (adc) -- node[above] {$x[n]$} (bpf);
+\draw[arrow] (bpf) -- node[right] {$y[n]$} (mag);
+\draw[arrow] (mag) -- node[above] {$M^2$} (thresh);
+\draw[arrow] (thresh) -- (out);
+\end{tikzpicture}%
+}
+\caption{Block Diagram for Modulated IR Receiver ($Threshold = 15000$)}
+\label{fig:modulated_block}
+\end{figure}
+
+After processing all $N$ samples in the block, the squared spectral magnitude $M^2$ (representing the signal power at the target frequency) is evaluated using the final two states:
+\begin{align}
+    M^2 = y[N-1]^2 + y[N-2]^2 - 2 \cos\left(\frac{2\pi k}{N}\right) y[N-1] y[N-2]
+\end{align}
+We intentionally evaluate the squared magnitude $M^2$ rather than the absolute magnitude to avoid the high computational latency of floating-point square root operations on an 8-bit microcontroller.
+
+The choice of block size $N=80$ represents a deliberate compromise between spectral resolution and temporal responsiveness. At a sampling rate of $f_s \approx 60\text{ kHz}$, an 80-sample block processes in approximately $1.33\text{ ms}$. This rapid turnover is crucial for accurately capturing the precise timing of Morse code durations without inducing blocking delays in the microcontroller loop. 
+
+In the discrete frequency domain, the bin resolution is defined as $\Delta f = f_s / N$, yielding $60000 / 80 = 750\text{ Hz}$. The target frequency index $k$ is calculated as $\text{round}(N \cdot f_{target} / f_s) = \text{round}(2.67) = 3$. Consequently, the mathematical center of this digital bandpass filter is located at $3 \times 750 = 2250\text{ Hz}$. While this establishes a slight offset from the $2000\text{ Hz}$ carrier, the $750\text{ Hz}$ bin width ensures the carrier falls securely within the primary constructive lobe of the filter, yielding a robust magnitude spike. Conversely, $0\text{ Hz}$ solar DC bias and $120\text{ Hz}$ indoor flicker fall deep into the filter's stopband and destructively cancel out over the integration period.
 
 \subsubsection{Static Thresholding and OOK Demodulation}
 In an ideal, noiseless environment, the Goertzel algorithm would compute a squared magnitude of exactly $M^2 = 0$ when the 2~kHz transmitter is off. In practice, however, the receiver's baseline is subject to thermal noise, ADC quantization errors, and residual harmonics from ambient electromagnetic interference. Consequently, the quiescent state continuously yields random, low-level spectral noise.
@@ -484,9 +564,9 @@ To translate the continuous Goertzel output into a discrete binary sequence, an 
     \tau_{mag} = 15000
 \end{equation}
 
-Because the algorithm accumulates 80 samples of 10-bit ADC values, constructive interference during a valid 2~kHz pulse produces massive squared magnitudes, typically on the order of $10^5$ to $10^6$. The threshold $\tau_{mag} = 15000$ is positioned sufficiently high to safely clear the baseline noise floor (which hovers significantly lower), yet low enough to detect attenuated signals from distant transmitters.
+Because the algorithm accumulates 80 samples of 10-bit ADC values, constructive interference during a valid 2~kHz pulse produces massive squared magnitudes, typically on the order of $10^5$ to $10^6$. The threshold $\tau_{mag} = 15000$ is positioned sufficiently high to safely clear the baseline noise floor, yet low enough to detect attenuated signals from distant transmitters.
 
-During the processing loop, the system acts as a digital slicer for On-Off Keying (OOK) demodulation by evaluating the boolean condition:
+During the real-time loop, the system acts as a digital slicer for On-Off Keying (OOK) demodulation by evaluating the conditional state:
 \begin{equation}
     \text{Pulse Detected} = \begin{cases} 
       \text{True (HIGH)}, & \text{if } M^2 > \tau_{mag} \\
@@ -494,7 +574,7 @@ During the processing loop, the system acts as a digital slicer for On-Off Keyin
    \end{cases}
 \end{equation}
 
-Crucially, this approach eliminates the need for the adaptive moving-average buffer required in raw unmodulated IR detection. Because the Goertzel filter mathematically isolates the target frequency and inherently suppresses the 0~Hz DC offset from sunlight, the baseline no longer wanders. This stability allows the system to rely on a highly efficient, hardcoded static threshold without risking false positives from environmental lighting shifts.
+Crucially, this approach eliminates the need for the adaptive moving-average buffer required in unmodulated IR detection. Because the Goertzel filter mathematically isolates the target frequency and inherently suppresses the 0~Hz DC offset from sunlight, the baseline remains absolutely stable. This stability allows the system to rely on a highly efficient, hardcoded static threshold without risking false positives from environmental lighting shifts.
 
 \section{Experimental Results}
 
